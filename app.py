@@ -20,23 +20,24 @@ st.markdown("""
         margin-bottom: 20px;
     }
     .stButton>button {
-        background-color: #2A5C9E;
-        color: white;
+        background-color: #E8F1F5;  /* Changed to light background */
+        color: #0B2545;  /* Changed to dark text */
         border-radius: 8px;
         padding: 0.5em 1em;
         margin-top: 5px;
         font-weight: 500;
+        border: 1px solid #2A5C9E;  /* Added border for definition */
     }
     .stButton>button:hover {
-        background-color: #3873C0;
-        color: white;
+        background-color: #D4E9F7;  /* Slightly darker on hover */
+        color: #0B2545;
     }
     .stRadio > div {
         flex-direction: column;
     }
     details {
-        background-color: #4A90D9;
-        color: white;
+        background-color: #E8F1F5;  /* Changed to light background */
+        color: #0B2545;  /* Changed to dark text */
         padding: 10px;
         border-radius: 8px;
         margin-bottom: 10px;
@@ -44,6 +45,7 @@ st.markdown("""
     summary {
         font-weight: bold;
         cursor: pointer;
+        color: #0B2545;  /* Ensure summary text is dark */
     }
     img {
         max-width: 100%;
@@ -61,9 +63,16 @@ st.markdown("""
     }
     .stTextInput>div>div>input {
         background-color: white;
+        color: #0B2545;  /* Dark text in input */
     }
     .stSelectbox>div>div>select {
         background-color: white;
+        color: #0B2545;  /* Dark text in select */
+    }
+    /* Fix expander styling */
+    .streamlit-expanderHeader {
+        background-color: #E8F1F5 !important;
+        color: #0B2545 !important;
     }
     </style>
 """, unsafe_allow_html=True)
