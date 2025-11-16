@@ -9,13 +9,13 @@ st.markdown("""
     <style>
     /* Main page background - soft mint gradient */
     [data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg,   #e3f2fd 0%, #bbdefb 100%);
+    background: linear-gradient(135deg,  #f8f9fa 0%, #e9ecef 100%);
     background-attachment: fixed;
     }
 
     /* Sidebar background - matching gradient */
     [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #bbdefb 0%, #90caf9 100%);
+    background: linear-gradient(180deg,  #e9ecef 0%, #dee2e6 100%);
     }
 
     body {
