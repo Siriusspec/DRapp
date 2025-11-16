@@ -50,6 +50,7 @@ def load_model(model_path='dr_model.h5'):
 
 def crop_image(img, tol=7):
     """Remove black borders from fundus image"""
+    img = np.array(img)
     if len(img.shape) == 2:
         gray = img
     else:
@@ -63,6 +64,7 @@ def crop_image(img, tol=7):
 
 def circle_crop(img):
     """Apply circular crop to fundus image"""
+    img = np.array(img)
     img = crop_image(img)
     h, w = img.shape[:2]
     side = max(h, w)
