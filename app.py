@@ -7,6 +7,17 @@ from PIL import Image
 # --- CSS Styling for Professional Look ---
 st.markdown("""
     <style>
+    /* Main page background - soft mint gradient */
+    [data-testid="stAppViewContainer"] {
+    background: linear-gradient(135deg, #e0f7f1 0%, #b0f4d4 100%);
+    background-attachment: fixed;
+    }
+
+    /* Sidebar background - matching gradient */
+    [data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #e0f7f1 0%, #b0f4d4 100%);
+    }
+
     body {
         background-color: #0B2545;
         color: #FFFFFF;
