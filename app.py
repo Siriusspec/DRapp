@@ -3,21 +3,26 @@ from datetime import datetime
 import base64
 from io import BytesIO
 from PIL import Image
+import numpy as np
+import cv2
+
+# Import model utilities
+from model_utils import (
+    load_model, preprocess_image, make_gradcam_heatmap, 
+    overlay_gradcam, predict_dr_stage, get_stage_recommendations,
+    create_comparison_image
+)
+
+# Page config
+st.set_page_config(
+    page_title="DR Detection System",
+    page_icon="👁️",
+    layout="wide"
+)
 
 # --- CSS Styling for Professional Look ---
 st.markdown("""
     <style>
-    /* Main page background - soft mint gradient */
-    [data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg,  #f8f9fa 0%, #e9ecef 100%);
-    background-attachment: fixed;
-    }
-
-    /* Sidebar background - matching gradient */
-    [data-testid="stSidebar"] {
-    background: linear-gradient(180deg,  #e9ecef 0%, #dee2e6 100%);
-    }
-
     body {
         background-color: #0B2545;
         color: #FFFFFF;
@@ -31,24 +36,24 @@ st.markdown("""
         margin-bottom: 20px;
     }
     .stButton>button {
-        background-color: #E8F1F5;  /* Changed to light background */
-        color: #0B2545;  /* Changed to dark text */
+        background-color: #E8F1F5;
+        color: #0B2545;
         border-radius: 8px;
         padding: 0.5em 1em;
         margin-top: 5px;
         font-weight: 500;
-        border: 1px solid #2A5C9E;  /* Added border for definition */
+        border: 1px solid #2A5C9E;
     }
     .stButton>button:hover {
-        background-color: #D4E9F7;  /* Slightly darker on hover */
+        background-color: #D4E9F7;
         color: #0B2545;
     }
     .stRadio > div {
         flex-direction: column;
     }
     details {
-        background-color: #E8F1F5;  /* Changed to light background */
-        color: #0B2545;  /* Changed to dark text */
+        background-color: #E8F1F5;
+        color: #0B2545;
         padding: 10px;
         border-radius: 8px;
         margin-bottom: 10px;
@@ -56,7 +61,7 @@ st.markdown("""
     summary {
         font-weight: bold;
         cursor: pointer;
-        color: #0B2545;  /* Ensure summary text is dark */
+        color: #0B2545;
     }
     img {
         max-width: 100%;
@@ -72,18 +77,46 @@ st.markdown("""
         color: #0B2545;
         border-left: 4px solid #2A5C9E;
     }
+    .result-box.critical {
+        background-color: #FFE5E5;
+        border-left: 4px solid #D32F2F;
+    }
+    .result-box.high {
+        background-color: #FFF3E0;
+        border-left: 4px solid #F57C00;
+    }
+    .result-box.medium {
+        background-color: #FFF9C4;
+        border-left: 4px solid #FBC02D;
+    }
+    .result-box.low {
+        background-color: #E8F5E9;
+        border-left: 4px solid #388E3C;
+    }
     .stTextInput>div>div>input {
         background-color: white;
-        color: #0B2545;  /* Dark text in input */
+        color: #0B2545;
     }
     .stSelectbox>div>div>select {
         background-color: white;
-        color: #0B2545;  /* Dark text in select */
+        color: #0B2545;
     }
-    /* Fix expander styling */
     .streamlit-expanderHeader {
         background-color: #E8F1F5 !important;
         color: #0B2545 !important;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #E8F1F5;
+        color: #0B2545;
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #2A5C9E;
+        color: white;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -95,6 +128,10 @@ if "diagnosis_result" not in st.session_state:
     st.session_state.diagnosis_result = None
 if "processed_image" not in st.session_state:
     st.session_state.processed_image = None
+if "gradcam_image" not in st.session_state:
+    st.session_state.gradcam_image = None
+if "original_image" not in st.session_state:
+    st.session_state.original_image = None
 if "quiz_score" not in st.session_state:
     st.session_state.quiz_score = 0
 if "patient_name" not in st.session_state:
@@ -103,6 +140,14 @@ if "patient_age" not in st.session_state:
     st.session_state.patient_age = ""
 if "patient_gender" not in st.session_state:
     st.session_state.patient_gender = ""
+if "model" not in st.session_state:
+    st.session_state.model = None
+
+# Load model once
+@st.cache_resource
+def get_model():
+    """Load model with caching"""
+    return load_model('dr_model.h5')
 
 # --- Tabs ---
 tabs = ["AI Diagnosis", "About DR", "Symptoms Guide", "Quiz", "Generate Report"]
@@ -111,127 +156,206 @@ tab = st.sidebar.radio("Navigation", tabs)
 # -------------------- AI Diagnosis Tab --------------------
 if tab == "AI Diagnosis":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header("🤖 AI Diagnosis")
+    st.header("🤖 AI-Powered Diabetic Retinopathy Diagnosis")
+    
+    # Check if model is loaded
+    if st.session_state.model is None:
+        with st.spinner("Loading AI model... This may take a moment."):
+            st.session_state.model = get_model()
+        
+        if st.session_state.model is None:
+            st.error("❌ Failed to load the AI model. Please ensure 'dr_model.h5' is in the app directory.")
+            st.stop()
+        else:
+            st.success("✅ AI model loaded successfully!")
     
     # Image Upload Section
-    st.subheader("Upload Retinal Image")
+    st.subheader("📤 Upload Retinal Image")
+    st.info("💡 Upload a fundus photograph (retinal image) for AI analysis. Supported formats: JPG, JPEG, PNG")
+    
     uploaded_file = st.file_uploader("Choose a retinal image...", type=["jpg", "jpeg", "png"])
     
     if uploaded_file is not None:
-        # Display uploaded image
+        # Load and display uploaded image
         image = Image.open(uploaded_file)
+        image_np = np.array(image)
+        
+        # Convert to RGB if necessary
+        if len(image_np.shape) == 2:
+            image_np = cv2.cvtColor(image_np, cv2.COLOR_GRAY2RGB)
+        elif image_np.shape[2] == 4:
+            image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2RGB)
+        
         st.session_state.uploaded_image = image
-        st.image(image, caption="Uploaded Retinal Image", use_column_width=True)
+        st.session_state.original_image = image_np.copy()
+        
+        # Display uploaded image
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.image(image, caption="📷 Uploaded Retinal Image", use_column_width=True)
+        
+        st.markdown("---")
         
         # Analyze Button
-        if st.button("🔍 Analyze Image", key="analyze_btn"):
-            with st.spinner("Analyzing image..."):
-                # Placeholder for model prediction
-                # In actual implementation, you would call your model here
-                import time
-                time.sleep(2)  # Simulate processing
-                
-                # Mock results (replace with actual model output)
-                st.session_state.diagnosis_result = {
-                    "stage": "Moderate Non-Proliferative DR",
-                    "confidence": 0.87,
-                    "description": "The retina shows signs of moderate diabetic retinopathy with microaneurysms and dot/blot hemorrhages."
-                }
-                st.session_state.processed_image = image  # Replace with actual GradCAM image
-            
-            st.success("✅ Analysis Complete!")
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.button("🔬 Analyze Image", type="primary", use_container_width=True):
+                with st.spinner("🔄 Processing image and running AI analysis..."):
+                    try:
+                        # Preprocess image
+                        processed_img = preprocess_image(image_np, target_size=(320, 320))
+                        st.session_state.processed_image = (processed_img * 255).astype(np.uint8)
+                        
+                        # Get prediction
+                        stage_name, confidence, raw_pred = predict_dr_stage(processed_img, st.session_state.model)
+                        
+                        # Generate GradCAM
+                        img_array = np.expand_dims(processed_img, axis=0)
+                        
+                        # Try to find the last conv layer
+                        last_conv_layer = None
+                        for layer in reversed(st.session_state.model.layers):
+                            if 'conv' in layer.name.lower():
+                                last_conv_layer = layer.name
+                                break
+                        
+                        if last_conv_layer:
+                            heatmap = make_gradcam_heatmap(img_array, st.session_state.model, last_conv_layer)
+                            gradcam_overlay = overlay_gradcam(st.session_state.processed_image, heatmap)
+                            st.session_state.gradcam_image = gradcam_overlay
+                        else:
+                            st.session_state.gradcam_image = st.session_state.processed_image
+                        
+                        # Get stage recommendations
+                        stage_info = get_stage_recommendations(stage_name)
+                        
+                        # Store results
+                        st.session_state.diagnosis_result = {
+                            "stage": stage_name,
+                            "confidence": confidence,
+                            "raw_prediction": raw_pred,
+                            "findings": stage_info["findings"],
+                            "recommendations": stage_info["recommendations"],
+                            "severity": stage_info["severity"]
+                        }
+                        
+                        st.success("✅ Analysis Complete!")
+                        st.balloons()
+                        
+                    except Exception as e:
+                        st.error(f"❌ Error during analysis: {str(e)}")
+                        st.info("Please try uploading a different image or check if the model file is correct.")
         
         # Show results if available
         if st.session_state.diagnosis_result:
             st.markdown("---")
+            st.subheader("📊 Analysis Results")
             
-            # Create two columns for the options
-            col1, col2 = st.columns(2)
+            # Create tabs for results
+            tab1, tab2 = st.tabs(["🔬 Diagnosis Results", "🖼️ Processed Images"])
             
-            with col1:
-                if st.button("📊 See Results", key="see_results_btn", use_container_width=True):
-                    st.session_state.show_results = True
-                    st.session_state.show_processed = False
-            
-            with col2:
-                if st.button("🖼️ See Processed Image", key="see_processed_btn", use_container_width=True):
-                    st.session_state.show_processed = True
-                    st.session_state.show_results = False
-            
-            # Display Results Tab
-            if st.session_state.get("show_results", False):
-                st.markdown("### Diagnosis Results")
+            with tab1:
                 result = st.session_state.diagnosis_result
+                severity_class = result.get("severity", "low")
                 
+                # Main diagnosis box
                 st.markdown(f"""
-                <div class="result-box">
-                    <h3>🔬 Detected Stage: {result['stage']}</h3>
-                    <p><strong>Confidence:</strong> {result['confidence']*100:.1f}%</p>
-                    <p><strong>Description:</strong> {result['description']}</p>
+                <div class="result-box {severity_class}">
+                    <h2 style="margin-top: 0;">🎯 Detected Stage: {result['stage']}</h2>
+                    <p style="font-size: 18px;"><strong>Confidence Level:</strong> {result['confidence']*100:.1f}%</p>
+                    <p style="font-size: 16px;"><strong>Raw Prediction Value:</strong> {result['raw_prediction']:.3f} (Scale: 0-4)</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                # Standard diagnosis based on stage
-                st.markdown("### 📋 Standard Diagnosis & Recommendations")
+                # Clinical Findings
+                st.markdown("### 🔍 Clinical Findings")
+                st.info(result['findings'])
                 
-                stage_recommendations = {
-                    "Mild Non-Proliferative DR": {
-                        "findings": "Microaneurysms present in the retina",
-                        "recommendations": [
-                            "Monitor blood sugar levels closely",
-                            "Schedule eye exams every 6-12 months",
-                            "Maintain HbA1c below 7%",
-                            "Control blood pressure"
-                        ]
-                    },
-                    "Moderate Non-Proliferative DR": {
-                        "findings": "Multiple microaneurysms, dot/blot hemorrhages, and some vessel blockage detected",
-                        "recommendations": [
-                            "Eye exams every 3-6 months",
-                            "Strict glycemic control required",
-                            "Consider laser treatment consultation",
-                            "Monitor for macular edema",
-                            "Control blood pressure and cholesterol"
-                        ]
-                    },
-                    "Severe Non-Proliferative DR": {
-                        "findings": "Extensive hemorrhages, cotton wool spots, and venous beading observed",
-                        "recommendations": [
-                            "Immediate ophthalmologist consultation",
-                            "Eye exams every 2-3 months",
-                            "Laser photocoagulation treatment recommended",
-                            "Intensive blood sugar management",
-                            "Monitor for progression to PDR"
-                        ]
-                    },
-                    "Proliferative DR": {
-                        "findings": "Abnormal new blood vessel growth (neovascularization) detected",
-                        "recommendations": [
-                            "URGENT: Immediate treatment required",
-                            "Panretinal photocoagulation (PRP) laser surgery",
-                            "Anti-VEGF injections may be needed",
-                            "Monthly follow-up appointments",
-                            "High risk of vision loss - immediate action needed"
-                        ]
-                    }
-                }
+                # Recommendations
+                st.markdown("### 💊 Recommended Actions")
                 
-                stage_info = stage_recommendations.get(result['stage'], {
-                    "findings": "Findings require professional evaluation",
-                    "recommendations": ["Consult with an ophthalmologist"]
-                })
+                if severity_class in ["critical", "high"]:
+                    st.error("⚠️ **URGENT ACTION REQUIRED**")
+                elif severity_class == "medium":
+                    st.warning("⚠️ **Medical Attention Recommended**")
+                else:
+                    st.success("✅ **Continue Regular Monitoring**")
                 
-                st.markdown(f"**Clinical Findings:** {stage_info['findings']}")
-                st.markdown("**Recommendations:**")
-                for rec in stage_info['recommendations']:
-                    st.markdown(f"- {rec}")
+                for i, rec in enumerate(result['recommendations'], 1):
+                    if rec.startswith("🚨") or rec.startswith("⚠️"):
+                        st.error(f"{i}. {rec}")
+                    else:
+                        st.write(f"{i}. {rec}")
+                
+                # Additional Information
+                with st.expander("ℹ️ Understanding Your Results"):
+                    st.write("""
+                    **About the AI Analysis:**
+                    - Our AI model uses deep learning to analyze retinal images
+                    - The model was trained on thousands of fundus photographs
+                    - Confidence level indicates how certain the model is about its prediction
+                    - Raw prediction value shows the continuous output before rounding to a stage
+                    
+                    **Important Notes:**
+                    - This is a screening tool and NOT a replacement for professional diagnosis
+                    - Always consult with a qualified ophthalmologist for proper evaluation
+                    - Early detection and treatment can prevent vision loss
+                    - Regular eye exams are crucial for diabetic patients
+                    """)
             
-            # Display Processed Image Tab
-            if st.session_state.get("show_processed", False):
-                st.markdown("### Processed Image with GradCAM")
-                st.info("GradCAM visualization shows the areas of the retina that contributed most to the diagnosis.")
-                if st.session_state.processed_image:
-                    st.image(st.session_state.processed_image, caption="GradCAM Heatmap", use_column_width=True)
+            with tab2:
+                st.markdown("### 🖼️ Image Analysis Visualization")
+                
+                # Show three images side by side
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.markdown("**Original Image**")
+                    st.image(st.session_state.original_image, use_column_width=True)
+                    st.caption("📷 As uploaded")
+                
+                with col2:
+                    st.markdown("**Preprocessed Image**")
+                    st.image(st.session_state.processed_image, use_column_width=True)
+                    st.caption("🔧 After circle crop & enhancement")
+                
+                with col3:
+                    st.markdown("**GradCAM Heatmap**")
+                    st.image(st.session_state.gradcam_image, use_column_width=True)
+                    st.caption("🔥 AI attention areas")
+                
+                st.markdown("---")
+                
+                with st.expander("ℹ️ Understanding GradCAM Visualization"):
+                    st.write("""
+                    **What is GradCAM?**
+                    
+                    Gradient-weighted Class Activation Mapping (GradCAM) is a visualization technique that shows 
+                    which regions of the retinal image were most important for the AI's decision.
+                    
+                    **How to interpret the heatmap:**
+                    - 🔴 **Red/Yellow areas**: Regions that strongly influenced the AI's diagnosis
+                    - 🔵 **Blue/Purple areas**: Regions with less influence on the prediction
+                    - These highlighted areas often correspond to lesions, hemorrhages, or other pathological features
+                    
+                    **Preprocessing steps applied:**
+                    1. Circle crop to focus on retinal area
+                    2. Resize to standard dimensions (320x320)
+                    3. Ben Graham's preprocessing for contrast enhancement
+                    4. Normalization for neural network input
+                    """)
+    
+    else:
+        # Show instructions when no image is uploaded
+        st.info("""
+        👆 **Please upload a retinal fundus image to begin analysis**
+        
+        **Tips for best results:**
+        - Use clear, well-lit fundus photographs
+        - Ensure the entire retina is visible
+        - Avoid images with excessive blur or artifacts
+        - JPG, JPEG, or PNG formats are supported
+        """)
     
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -239,21 +363,27 @@ if tab == "AI Diagnosis":
 elif tab == "About DR":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.header("ℹ️ About Diabetic Retinopathy")
+    
+    st.write("""
+    Diabetic Retinopathy (DR) is a diabetes complication that affects the eyes. 
+    It's caused by damage to the blood vessels of the light-sensitive tissue at the back of the eye (retina).
+    """)
 
     stages = [
-        ("Mild Non-Proliferative DR", "Presence of microaneurysms, small red dots in the retina.", "stage1.jpg"),
+        ("No DR", "No signs of diabetic retinopathy. Retinal blood vessels appear normal.", "stage0.jpg"),
+        ("Mild Non-Proliferative DR", "Microaneurysms present - small bulges in retinal blood vessels.", "stage1.jpg"),
         ("Moderate Non-Proliferative DR", "More extensive microaneurysms, dot/blot hemorrhages, some vessel blockage.", "stage2.jpg"),
         ("Severe Non-Proliferative DR", "Many hemorrhages, cotton wool spots, venous beading; high risk of progression.", "stage3.jpg"),
         ("Proliferative DR", "Abnormal new vessels (neovascularization), high risk of bleeding and vision loss.", "stage4.jpg")
     ]
 
     for stage, desc, img_path in stages:
-        with st.expander(stage):
+        with st.expander(f"📌 {stage}"):
             st.write(desc)
             try:
-                st.image(img_path,  width=300)
+                st.image(img_path, use_column_width=True)
             except:
-                st.warning(f"Image {img_path} not found. Please make sure it's in the same folder as app.py.")
+                st.info(f"Sample image for {stage} would appear here.")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -268,11 +398,25 @@ elif tab == "Symptoms Guide":
         ("Blurred or distorted vision", "Blood vessel leakage causes distorted vision."),
         ("Poor night vision", "Difficulty seeing at night or in dim light conditions."),
         ("Eye pain or pressure", "Usually in advanced stages, can signal complications."),
-        ("Gradual vision loss", "Slow loss of vision over time, often unnoticed initially.")
+        ("Gradual vision loss", "Slow loss of vision over time, often unnoticed initially."),
+        ("Difficulty with color perception", "Colors may appear faded or washed out."),
+        ("Dark or empty areas in vision", "Caused by bleeding or fluid accumulation in the retina.")
     ]
 
     for symptom, explanation in symptoms:
-        st.markdown(f"<details><summary>{symptom}</summary>{explanation}</details>", unsafe_allow_html=True)
+        st.markdown(f"<details><summary>{symptom}</summary><p>{explanation}</p></details>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.subheader("🛡️ Prevention Tips")
+    st.write("""
+    1. **Control Blood Sugar**: Keep HbA1c below 7%
+    2. **Monitor Blood Pressure**: Target <140/90 mmHg
+    3. **Regular Eye Exams**: Annual dilated eye exams
+    4. **Healthy Diet**: Focus on vegetables, lean proteins, whole grains
+    5. **Exercise Regularly**: At least 30 minutes daily
+    6. **Quit Smoking**: Smoking increases DR risk significantly
+    7. **Manage Cholesterol**: Keep LDL cholesterol in check
+    """)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -280,6 +424,7 @@ elif tab == "Symptoms Guide":
 elif tab == "Quiz":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.header("❓ Diabetic Retinopathy Quiz")
+    st.write("Test your knowledge about diabetic retinopathy!")
 
     questions = [
         {"q": "Which part of the eye does diabetic retinopathy primarily affect?", "opts": ["Cornea", "Lens", "Retina", "Optic nerve"], "ans": 2, "exp": "Correct! DR affects retina vessels."},
@@ -311,21 +456,32 @@ elif tab == "Quiz":
                 st.session_state[f"answered_{i}"] = True
 
     st.write("---")
-    st.write(f"**Your total score: {st.session_state.quiz_score} / {len(questions)}**")
-    if st.button("Reset Quiz"):
+    score_percentage = (st.session_state.quiz_score / len(questions)) * 100
+    st.write(f"**Your total score: {st.session_state.quiz_score} / {len(questions)} ({score_percentage:.0f}%)**")
+    
+    if score_percentage >= 80:
+        st.success("🎉 Excellent! You have great knowledge about DR!")
+    elif score_percentage >= 60:
+        st.info("👍 Good job! Keep learning more about DR.")
+    else:
+        st.warning("📚 Consider reviewing the About DR and Symptoms sections.")
+    
+    if st.button("🔄 Reset Quiz"):
         st.session_state.quiz_score = 0
         for i in range(len(questions)):
-            st.session_state[f"answered_{i}"] = False
+            if f"answered_{i}" in st.session_state:
+                del st.session_state[f"answered_{i}"]
+        st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------- Generate Report Tab --------------------
 elif tab == "Generate Report":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header("📝 Generate Medical Report")
+    st.header("📄 Generate Medical Report")
     
     # Patient Information Form
-    st.subheader("Patient Information")
+    st.subheader("👤 Patient Information")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -355,37 +511,36 @@ elif tab == "Generate Report":
             # Generate HTML report
             result = st.session_state.diagnosis_result
             
-            # Get stage-specific recommendations
-            stage_recommendations = {
-                "Mild Non-Proliferative DR": {
-                    "findings": "Microaneurysms present in the retina",
-                    "treatment": "Monitor blood sugar levels closely, schedule eye exams every 6-12 months, maintain HbA1c below 7%, and control blood pressure."
-                },
-                "Moderate Non-Proliferative DR": {
-                    "findings": "Multiple microaneurysms, dot/blot hemorrhages, and some vessel blockage detected",
-                    "treatment": "Eye exams every 3-6 months, strict glycemic control required, consider laser treatment consultation, monitor for macular edema, and control blood pressure and cholesterol."
-                },
-                "Severe Non-Proliferative DR": {
-                    "findings": "Extensive hemorrhages, cotton wool spots, and venous beading observed",
-                    "treatment": "Immediate ophthalmologist consultation required. Eye exams every 2-3 months, laser photocoagulation treatment recommended, intensive blood sugar management, and close monitoring for progression to PDR."
-                },
-                "Proliferative DR": {
-                    "findings": "Abnormal new blood vessel growth (neovascularization) detected",
-                    "treatment": "URGENT: Immediate treatment required. Panretinal photocoagulation (PRP) laser surgery, Anti-VEGF injections may be needed, monthly follow-up appointments. High risk of vision loss - immediate action needed."
-                }
-            }
-            
-            stage_info = stage_recommendations.get(result['stage'], {
-                "findings": "Findings require professional evaluation",
-                "treatment": "Please consult with an ophthalmologist for detailed treatment plan."
-            })
-            
-            # Convert image to base64
+            # Convert images to base64
             img_base64 = ""
+            processed_img_base64 = ""
+            gradcam_img_base64 = ""
+            
             if st.session_state.uploaded_image:
                 buffered = BytesIO()
                 st.session_state.uploaded_image.save(buffered, format="PNG")
                 img_base64 = base64.b64encode(buffered.getvalue()).decode()
+            
+            if st.session_state.processed_image is not None:
+                processed_pil = Image.fromarray(st.session_state.processed_image)
+                buffered = BytesIO()
+                processed_pil.save(buffered, format="PNG")
+                processed_img_base64 = base64.b64encode(buffered.getvalue()).decode()
+            
+            if st.session_state.gradcam_image is not None:
+                gradcam_pil = Image.fromarray(st.session_state.gradcam_image)
+                buffered = BytesIO()
+                gradcam_pil.save(buffered, format="PNG")
+                gradcam_img_base64 = base64.b64encode(buffered.getvalue()).decode()
+            
+            severity_colors = {
+                "low": "#4CAF50",
+                "medium": "#FFC107",
+                "high": "#FF9800",
+                "critical": "#F44336"
+            }
+            
+            severity_color = severity_colors.get(result.get("severity", "low"), "#2A5C9E")
             
             html_content = f"""
             <!DOCTYPE html>
@@ -393,72 +548,138 @@ elif tab == "Generate Report":
             <head>
                 <style>
                     body {{
-                        font-family: Arial, sans-serif;
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                         padding: 40px;
                         color: #333;
+                        line-height: 1.6;
                     }}
                     .header {{
                         text-align: center;
-                        border-bottom: 3px solid #2A5C9E;
+                        border-bottom: 4px solid {severity_color};
                         padding-bottom: 20px;
                         margin-bottom: 30px;
                     }}
                     .header h1 {{
-                        color: #2A5C9E;
+                        color: {severity_color};
                         margin: 0;
+                        font-size: 32px;
+                    }}
+                    .header p {{
+                        color: #666;
+                        margin: 10px 0;
                     }}
                     .section {{
-                        margin: 20px 0;
-                        padding: 15px;
-                        background-color: #f5f5f5;
+                        margin: 25px 0;
+                        padding: 20px;
+                        background-color: #f9f9f9;
                         border-radius: 8px;
+                        border-left: 4px solid {severity_color};
                     }}
                     .section h2 {{
-                        color: #2A5C9E;
-                        border-bottom: 2px solid #2A5C9E;
-                        padding-bottom: 10px;
+                        color: {severity_color};
+                        margin-top: 0;
+                        font-size: 24px;
                     }}
                     .info-row {{
-                        margin: 10px 0;
+                        margin: 12px 0;
+                        padding: 8px;
+                        background-color: white;
+                        border-radius: 4px;
                     }}
                     .label {{
                         font-weight: bold;
                         color: #555;
+                        display: inline-block;
+                        min-width: 150px;
                     }}
                     .diagnosis-box {{
-                        background-color: #E8F1F5;
+                        background-color: #E8F5E9;
+                        padding: 20px;
+                        border-left: 6px solid {severity_color};
+                        margin: 20px 0;
+                        border-radius: 8px;
+                    }}
+                    .diagnosis-box h3 {{
+                        margin-top: 0;
+                        color: {severity_color};
+                        font-size: 26px;
+                    }}
+                    .recommendations {{
+                        background-color: white;
                         padding: 15px;
-                        border-left: 4px solid #2A5C9E;
+                        border-radius: 6px;
                         margin: 15px 0;
+                    }}
+                    .recommendations ul {{
+                        margin: 10px 0;
+                        padding-left: 25px;
+                    }}
+                    .recommendations li {{
+                        margin: 8px 0;
+                        line-height: 1.6;
                     }}
                     .image-container {{
                         text-align: center;
                         margin: 20px 0;
                     }}
                     .image-container img {{
-                        max-width: 500px;
+                        max-width: 400px;
                         border: 2px solid #ddd;
                         border-radius: 8px;
+                        margin: 10px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    }}
+                    .image-row {{
+                        display: flex;
+                        justify-content: space-around;
+                        flex-wrap: wrap;
+                        margin: 20px 0;
+                    }}
+                    .image-item {{
+                        text-align: center;
+                        margin: 10px;
+                    }}
+                    .image-caption {{
+                        font-weight: bold;
+                        margin-top: 10px;
+                        color: #555;
                     }}
                     .footer {{
-                        margin-top: 40px;
+                        margin-top: 50px;
                         text-align: center;
                         font-size: 12px;
                         color: #777;
-                        border-top: 1px solid #ddd;
+                        border-top: 2px solid #ddd;
                         padding-top: 20px;
+                    }}
+                    .disclaimer {{
+                        background-color: #FFF9E6;
+                        padding: 15px;
+                        border-left: 4px solid #FFC107;
+                        margin: 20px 0;
+                        border-radius: 6px;
+                    }}
+                    .severity-badge {{
+                        display: inline-block;
+                        padding: 8px 16px;
+                        background-color: {severity_color};
+                        color: white;
+                        border-radius: 20px;
+                        font-weight: bold;
+                        margin: 10px 0;
                     }}
                 </style>
             </head>
             <body>
                 <div class="header">
                     <h1>🏥 DIABETIC RETINOPATHY DIAGNOSIS REPORT</h1>
-                    <p>AI-Powered Retinal Analysis</p>
+                    <p style="font-size: 18px;">AI-Powered Retinal Analysis System</p>
+                    <p>Report Generated: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}</p>
                 </div>
                 
                 <div class="section">
                     <h2>👤 Patient Information</h2>
-                    <div class="info-row"><span class="label">Name:</span> {patient_name}</div>
+                    <div class="info-row"><span class="label">Full Name:</span> {patient_name}</div>
                     <div class="info-row"><span class="label">Age:</span> {patient_age} years</div>
                     <div class="info-row"><span class="label">Gender:</span> {patient_gender}</div>
                     <div class="info-row"><span class="label">Report Date:</span> {datetime.now().strftime("%B %d, %Y")}</div>
@@ -468,29 +689,64 @@ elif tab == "Generate Report":
                 <div class="section">
                     <h2>🔬 AI Diagnosis Results</h2>
                     <div class="diagnosis-box">
-                        <h3 style="margin-top: 0; color: #2A5C9E;">Detected Stage: {result['stage']}</h3>
+                        <h3>Detected Stage: {result['stage']}</h3>
+                        <span class="severity-badge">Severity: {result.get('severity', 'N/A').upper()}</span>
                         <div class="info-row"><span class="label">Confidence Level:</span> {result['confidence']*100:.1f}%</div>
-                        <div class="info-row"><span class="label">Clinical Findings:</span> {stage_info['findings']}</div>
+                        <div class="info-row"><span class="label">Raw Prediction:</span> {result.get('raw_prediction', 0):.3f} (Scale: 0-4)</div>
+                        <div class="info-row" style="margin-top: 15px;">
+                            <span class="label">Clinical Findings:</span><br>
+                            <p style="margin: 10px 0; padding: 10px; background-color: white; border-radius: 4px;">
+                                {result['findings']}
+                            </p>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="section">
-                    <h2>💊 Recommended Treatment</h2>
-                    <p>{stage_info['treatment']}</p>
+                    <h2>💊 Recommended Treatment & Management</h2>
+                    <div class="recommendations">
+                        <ul>
+                            {''.join([f'<li>{rec}</li>' for rec in result['recommendations']])}
+                        </ul>
+                    </div>
                 </div>
                 
                 <div class="section">
-                    <h2>📊 Quiz Performance</h2>
-                    <div class="info-row"><span class="label">Score:</span> {st.session_state.quiz_score} / 10</div>
+                    <h2>📊 Patient Knowledge Assessment</h2>
+                    <div class="info-row"><span class="label">Quiz Score:</span> {st.session_state.quiz_score} / 10</div>
                     <div class="info-row"><span class="label">Percentage:</span> {(st.session_state.quiz_score/10)*100:.0f}%</div>
+                    <div class="info-row"><span class="label">Assessment:</span> 
+                        {'Excellent understanding of diabetic retinopathy' if st.session_state.quiz_score >= 8 else 
+                         'Good understanding, continue learning' if st.session_state.quiz_score >= 6 else 
+                         'Needs improvement - patient education recommended'}
+                    </div>
                 </div>
                 
-                {"<div class='section'><h2>📷 Retinal Image</h2><div class='image-container'><img src='data:image/png;base64," + img_base64 + "' alt='Retinal Image'/></div></div>" if img_base64 else ""}
+                {"<div class='section'><h2>🖼️ Retinal Image Analysis</h2>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
+                {"<div class='image-row'>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
+                    {"<div class='image-item'><img src='data:image/png;base64," + img_base64 + "' alt='Original Image'/><p class='image-caption'>Original Retinal Image</p></div>" if img_base64 else ""}
+                    {"<div class='image-item'><img src='data:image/png;base64," + processed_img_base64 + "' alt='Processed Image'/><p class='image-caption'>Preprocessed Image</p></div>" if processed_img_base64 else ""}
+                    {"<div class='image-item'><img src='data:image/png;base64," + gradcam_img_base64 + "' alt='GradCAM'/><p class='image-caption'>GradCAM Heatmap</p></div>" if gradcam_img_base64 else ""}
+                {"</div></div>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
+                
+                <div class="disclaimer">
+                    <h3 style="margin-top: 0; color: #F57C00;">⚠️ Important Disclaimer</h3>
+                    <p><strong>This report is generated by an AI system and should NOT replace professional medical advice.</strong></p>
+                    <p>The AI model is designed as a screening tool to assist healthcare professionals. All diagnoses should be confirmed by a qualified ophthalmologist through comprehensive clinical examination.</p>
+                    <p><strong>Next Steps:</strong></p>
+                    <ul>
+                        <li>Schedule an appointment with an ophthalmologist for comprehensive eye examination</li>
+                        <li>Bring this report to your appointment for reference</li>
+                        <li>Continue regular diabetes management and monitoring</li>
+                    </ul>
+                </div>
                 
                 <div class="footer">
-                    <p><strong>Disclaimer:</strong> This report is generated by an AI system and should not replace professional medical advice. 
-                    Please consult with a qualified ophthalmologist for proper diagnosis and treatment.</p>
-                    <p>Report generated on {datetime.now().strftime("%B %d, %Y at %I:%M %p")}</p>
+                    <p><strong>AI Model Information:</strong> EfficientNet-B5 Deep Learning Model</p>
+                    <p><strong>Training Dataset:</strong> APTOS 2019 Blindness Detection Dataset</p>
+                    <p>Report generated by DR Detection System v1.0</p>
+                    <p>Generated on {datetime.now().strftime("%B %d, %Y at %I:%M %p")}</p>
+                    <p style="margin-top: 20px;">For questions or concerns, please consult your healthcare provider.</p>
                 </div>
             </body>
             </html>
@@ -501,11 +757,20 @@ elif tab == "Generate Report":
             st.download_button(
                 label="⬇️ Download Report (HTML)",
                 data=html_content,
-                file_name=f"DR_Report_{patient_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d')}.html",
+                file_name=f"DR_Report_{patient_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                 mime="text/html",
                 use_container_width=True
             )
             
-            st.info("💡 Tip: Open the downloaded HTML file in any web browser to view your complete report.")
+            st.info("💡 **Tip:** Open the downloaded HTML file in any web browser to view your complete report. You can print or save it as PDF from your browser.")
+            
+            # Show preview
+            with st.expander("👁️ Preview Report"):
+                st.markdown("**Report Summary:**")
+                st.write(f"- **Patient:** {patient_name}, {patient_age} years old, {patient_gender}")
+                st.write(f"- **Diagnosis:** {result['stage']}")
+                st.write(f"- **Confidence:** {result['confidence']*100:.1f}%")
+                st.write(f"- **Quiz Score:** {st.session_state.quiz_score}/10")
+                st.write(f"- **Images Included:** {'Yes' if img_base64 else 'No'}")
     
     st.markdown('</div>', unsafe_allow_html=True)
