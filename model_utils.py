@@ -78,6 +78,8 @@ def circle_crop(img):
     cv2.circle(mask, (x, y), r, 1, -1)
     
     mask = mask.astype(np.uint8)
+    print(type(img), img.shape, img.dtype)
+    print(type(mask), mask.shape, mask.dtype)
     img = cv2.bitwise_and(img, img, mask=mask)
     return crop_image(img)
 
