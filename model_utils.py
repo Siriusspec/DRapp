@@ -77,9 +77,7 @@ def circle_crop(img):
     mask = np.zeros((side, side), np.uint8)
     cv2.circle(mask, (x, y), r, 1, -1)
     
-    if len(img.shape) == 3:
-        mask = np.stack([mask] * 3, axis=-1)
-    
+    mask = mask.astype(np.uint8)
     img = cv2.bitwise_and(img, img, mask=mask)
     return crop_image(img)
 
