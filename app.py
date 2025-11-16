@@ -95,7 +95,7 @@ elif tab == "Symptoms Guide":
     ]
 
     for symptom, explanation in symptoms:
-        st.markdown(f"<details><summary style='color:white; font-weight:bold; cursor:pointer;'>{symptom}</summary>{explanation}</details>", unsafe_allow_html=True)
+        st.markdown(f"<details style='color:white;'><summary style='color:white; cursor:pointer;'>{symptom}</summary>{explanation}</details>", unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
