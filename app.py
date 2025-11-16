@@ -196,14 +196,14 @@ if tab == "AI Diagnosis":
             image_np = cv2.cvtColor(image_np, cv2.COLOR_GRAY2RGB)
         elif image_np.shape[2] == 4:
             image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2RGB)
-        
+        image_np = image_np.astype(np.uint8)
         st.session_state.uploaded_image = image
         st.session_state.original_image = image_np.copy()
         
         # Display uploaded image
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.image(image, caption="📷 Uploaded Retinal Image", use_column_width=True)
+            st.image(image, caption="📷 Uploaded Retinal Image", use_container_width=300)
         
         st.markdown("---")
         
