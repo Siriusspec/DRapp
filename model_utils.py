@@ -59,7 +59,12 @@ def crop_image(img, tol=7):
     mask = gray > tol
     if not mask.any():
         return img
-    return img[np.ix_(mask.any(1), mask.any(0))]
+    # Find the bounding box of the mask
+    coords = np.argwhere(mask)  # returns N x 2 array of (row, col)
+    y0, x0 = coords.min(axis=0)
+    y1, x1 = coords.max(axis=0) + 1  # slices are exclusive at the end
+
+    return img[y0:y1, x0:x1]
 
 
 def circle_crop(img):
