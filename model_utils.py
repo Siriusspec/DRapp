@@ -94,6 +94,7 @@ def preprocess_image(image, target_size=(320, 320)):
     3. Ben Graham's preprocessing (contrast enhancement)
     4. Normalize to [0, 1]
     """
+    image_np = np.array(image)
     # Ensure RGB format
     if len(image.shape) == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
