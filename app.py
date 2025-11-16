@@ -240,7 +240,7 @@ elif tab == "About DR":
         with st.expander(stage):
             st.write(desc)
             try:
-                st.image(img_path, use_column_width=True)
+                st.image(img_path,  width=300)
             except:
                 st.warning(f"Image {img_path} not found. Please make sure it's in the same folder as app.py.")
 
