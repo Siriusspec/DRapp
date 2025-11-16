@@ -25,6 +25,7 @@ libclang==18.1.1
 Markdown==3.8
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
+matplotlib==3.7.2
 mdurl==0.1.2
 namex==0.1.0
 narwhals==1.43.1
