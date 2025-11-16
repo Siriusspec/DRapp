@@ -2,49 +2,73 @@ import streamlit as st
 
 # --- CSS Styling for Dark Theme ---
 st.markdown("""
-    <style>
-    body {
-        background-color: #0B2545;
-        color: #FFFFFF;
-    }
-    .card {
-        background-color: #0B2545;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        margin-bottom: 20px;
-    }
-    .stButton>button {
-        background-color: #2A5C9E;
-        color: white;
-        border-radius: 8px;
-        padding: 0.35em 0.75em;
-        margin-top: 5px;
-    }
-    .stButton>button:hover {
-        background-color: #3873C0;
-        color: white;
-    }
-    .stRadio > div {
-        flex-direction: column;
-    }
-    details {
-        background-color: #2757A0;
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-    }
-    summary {
-        font-weight: bold;
-        cursor: pointer;
-    }
-    img {
-        max-width: 100%;
-        border-radius: 8px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-    </style>
+<style>
+/* Base body */
+body {
+    background-color: #0B2545; /* dark blue */
+    color: #FFFFFF;            /* all text white */
+    font-family: sans-serif;
+}
+
+/* Card styling for all sections */
+.card {
+    background-color: #0B2545;
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    margin-bottom: 20px;
+}
+
+/* Buttons */
+.stButton>button {
+    background-color: #2A5C9E;
+    color: white;
+    border-radius: 8px;
+    padding: 0.35em 0.75em;
+    margin-top: 5px;
+    border: none;
+}
+.stButton>button:hover {
+    background-color: #3873C0; /* lighter blue on hover */
+    color: white;
+}
+
+/* Radio buttons vertical alignment */
+.stRadio > div {
+    flex-direction: column;
+}
+
+/* Details / expanders */
+details {
+    background-color: #0B2545;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    color: white; /* text inside details */
+}
+details[open] {
+    background-color: #0B2545; /* stays same when expanded */
+}
+details:hover {
+    background-color: #1B3B70; /* slightly lighter blue on hover */
+}
+
+/* Summary (clickable header of details) */
+summary {
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+}
+
+/* Images inside card */
+img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # --- Tabs ---
@@ -72,7 +96,7 @@ elif tab == "About DR":
 
     for stage, desc, img_path in stages:
         with st.expander(stage):
-            st.write(desc)
+            st.markdown(f'<div class="card">{desc}</div>', unsafe_allow_html=True)
             try:
                 st.image(img_path, use_column_width=True)
             except:
@@ -95,7 +119,14 @@ elif tab == "Symptoms Guide":
     ]
 
     for symptom, explanation in symptoms:
-        st.markdown(f"<details style='color:white;'><summary style='color:white; cursor:pointer;'>{symptom}</summary>{explanation}</details>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div class="card">
+            <details>
+                <summary>{symptom}</summary>
+                {explanation}
+            </details>
+        </div>
+        """, unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -108,16 +139,26 @@ elif tab == "Quiz":
         st.session_state.quiz_score = 0
 
     questions = [
-        {"q": "Which part of the eye does diabetic retinopathy primarily affect?", "opts": ["Cornea", "Lens", "Retina", "Optic nerve"], "ans": 2, "exp": "Correct! DR affects retina vessels."},
-        {"q": "Which is a common early symptom of diabetic retinopathy?", "opts": ["Sudden blindness", "Floaters or spots", "Eye pain", "Double vision"], "ans": 1, "exp": "Floaters are early signs due to micro-bleeds."},
-        {"q": "Which of these increases the likelihood of DR?", "opts": ["Short duration of diabetes", "Poor blood sugar control", "Low blood pressure", "Low cholesterol"], "ans": 1, "exp": "High blood sugar damages retinal vessels."},
-        {"q": "How often should a diabetic person get an eye exams?", "opts": ["Every 5 years", "Only if vision declines", "Annually", "Never if no symptoms"], "ans": 2, "exp": "Annual exams catch DR early."},
-        {"q": "Fluid in the center of retina is called?", "opts": ["Retinal detachment", "Macular edema", "Glaucoma", "Cataract"], "ans": 1, "exp": "Macular edema results from vessel leakage."},
-        {"q": "Which of these is a lifestyle change to reduce risk?", "opts": ["Smoking more", "Exercising regularly", "Avoiding eye exams", "Increasing sugar intake"], "ans": 1, "exp": "Exercise helps control blood sugar."},
-        {"q": "Severe DR treatment?", "opts": ["Anti-VEGF injections", "Eyeglasses prescription", "Antibiotic drops", "Vitamin C supplements"], "ans": 0, "exp": "Anti-VEGF reduces abnormal vessel growth."},
-        {"q": "Early DR always has symptoms?", "opts": ["True", "False", "Only type 1", "Only type 2"], "ans": 1, "exp": "False. Early DR often asymptomatic."},
-        {"q": "Underlying cause of DR?", "opts": ["High blood sugar", "Low blood sugar", "Kidney failure", "High calcium"], "ans": 0, "exp": "High sugar damages retinal vessels."},
-        {"q": "Which of these is not recommended to manage DR risk?", "opts": ["Regular eye exams", "Manage blood pressure", "Quit smoking", "Skip sugar monitoring"], "ans": 3, "exp": "Monitoring sugar is essential."},
+        {"q": "Which part of the eye does diabetic retinopathy primarily affect?", 
+         "opts": ["Cornea", "Lens", "Retina", "Optic nerve"], "ans": 2, "exp": "Correct! DR affects retina vessels."},
+        {"q": "Which is a common early symptom of diabetic retinopathy?", 
+         "opts": ["Sudden blindness", "Floaters or spots", "Eye pain", "Double vision"], "ans": 1, "exp": "Floaters are early signs due to micro-bleeds."},
+        {"q": "Which of these increases the likelihood of DR?", 
+         "opts": ["Short duration of diabetes", "Poor blood sugar control", "Low blood pressure", "Low cholesterol"], "ans": 1, "exp": "High blood sugar damages retinal vessels."},
+        {"q": "How often should a diabetic person get an eye exam?", 
+         "opts": ["Every 5 years", "Only if vision declines", "Annually", "Never if no symptoms"], "ans": 2, "exp": "Annual exams catch DR early."},
+        {"q": "Fluid in the center of retina is called?", 
+         "opts": ["Retinal detachment", "Macular edema", "Glaucoma", "Cataract"], "ans": 1, "exp": "Macular edema results from vessel leakage."},
+        {"q": "Which of these is a lifestyle change to reduce risk?", 
+         "opts": ["Smoking more", "Exercising regularly", "Avoiding eye exams", "Increasing sugar intake"], "ans": 1, "exp": "Exercise helps control blood sugar."},
+        {"q": "Severe DR treatment?", 
+         "opts": ["Anti-VEGF injections", "Eyeglasses prescription", "Antibiotic drops", "Vitamin C supplements"], "ans": 0, "exp": "Anti-VEGF reduces abnormal vessel growth."},
+        {"q": "Early DR always has symptoms?", 
+         "opts": ["True", "False", "Only type 1", "Only type 2"], "ans": 1, "exp": "False. Early DR often asymptomatic."},
+        {"q": "Underlying cause of DR?", 
+         "opts": ["High blood sugar", "Low blood sugar", "Kidney failure", "High calcium"], "ans": 0, "exp": "High sugar damages retinal vessels."},
+        {"q": "Which of these is not recommended to manage DR risk?", 
+         "opts": ["Regular eye exams", "Manage blood pressure", "Quit smoking", "Skip sugar monitoring"], "ans": 3, "exp": "Monitoring sugar is essential."},
     ]
 
     for i, q in enumerate(questions):
