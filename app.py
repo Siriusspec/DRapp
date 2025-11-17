@@ -632,7 +632,7 @@ elif tab == "Generate Report":
                         text-align: center;
                         margin: 20px 0;
                     }}
-                    .image-container img {{
+                    .image-item img {{
                         max-width: 300px;
                         border: 2px solid #ddd;
                         border-radius: 8px;
