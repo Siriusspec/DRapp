@@ -633,7 +633,7 @@ elif tab == "Generate Report":
                         margin: 20px 0;
                     }}
                     .image-container img {{
-                        max-width: 400px;
+                        max-width: 300px;
                         border: 2px solid #ddd;
                         border-radius: 8px;
                         margin: 10px;
