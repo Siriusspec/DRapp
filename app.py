@@ -203,14 +203,14 @@ if tab == "AI Diagnosis":
         # Display uploaded image
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.image(image, caption="📷 Uploaded Retinal Image", use_container_width=300)
+            st.image(image, caption="📷 Uploaded Retinal Image", use_container_width=200)
         
         st.markdown("---")
         
         # Analyze Button
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            if st.button("🔬 Analyze Image", type="primary", use_container_width=300):
+            if st.button("🔬 Analyze Image", type="primary", use_container_width=200):
                 with st.spinner("🔄 Processing image and running AI analysis..."):
                     try:
                         # Preprocess image
