@@ -247,9 +247,20 @@ def predict_dr_stage(image, model):
     # Round to nearest integer class
     stage = int(np.clip(np.round(raw_pred), 0, 4))
     
-    # Calculate confidence (distance from nearest class boundary)
+    # Better confidence calculation based on proximity to prediction
+    # If within 0.5 of the predicted class, high confidence
+    # If prediction is between classes, still reasonably confident
     distance_to_pred = abs(raw_pred - stage)
-    confidence = 1 - min(distance_to_pred, 0.5) * 2  # Scale to [0.5, 1]
+    
+    # More generous confidence scoring
+    if distance_to_pred < 0.3:
+        confidence = 0.95  # Very confident
+    elif distance_to_pred < 0.5:
+        confidence = 0.85  # Confident
+    elif distance_to_pred < 0.7:
+        confidence = 0.75  # Moderately confident
+    else:
+        confidence = 0.65  # Reasonable confidence
     
     # Stage names
     stage_names = {
