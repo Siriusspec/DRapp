@@ -322,17 +322,17 @@ if tab == "AI Diagnosis":
                 
                 with col1:
                     st.markdown("**Original Image**")
-                    st.image(st.session_state.original_image, use_container_width=300)
+                    st.image(st.session_state.original_image, use_container_width=True)
                     st.caption("📷 As uploaded")
                 
                 with col2:
                     st.markdown("**Preprocessed Image**")
-                    st.image(st.session_state.processed_image, use_container_width=300)
+                    st.image(st.session_state.processed_image, use_container_width=True)
                     st.caption("🔧 After circle crop & enhancement")
                 
                 with col3:
                     st.markdown("**GradCAM Heatmap**")
-                    st.image(st.session_state.gradcam_image, use_container_width=300)
+                    st.image(st.session_state.gradcam_image, use_container_width=True)
                     st.caption("🔥 AI attention areas")
                 
                 st.markdown("---")
