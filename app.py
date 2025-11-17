@@ -512,7 +512,7 @@ elif tab == "Generate Report":
     st.markdown("---")
     
     # Generate Report Button
-    if st.button("📄 Generate & Download Report", type="primary", use_container_width=True):
+    if st.button("📄 Generate & Download Report", type="primary", use_container_width=300):
         if not patient_name or not patient_age or patient_gender == "Select":
             st.error("⚠️ Please fill in all patient information fields.")
         elif not st.session_state.diagnosis_result:
