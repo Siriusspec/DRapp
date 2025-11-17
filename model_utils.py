@@ -70,6 +70,13 @@ def crop_image(img, tol=7):
 def circle_crop(img):
     """Apply circular crop to fundus image"""
     img = np.array(img)
+    
+    # Ensure RGB format before processing
+    if len(img.shape) == 2:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+    elif img.shape[2] == 4:
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+    
     img = crop_image(img)
     h, w = img.shape[:2]
     side = max(h, w)
@@ -84,12 +91,14 @@ def circle_crop(img):
     mask = np.zeros((side, side), np.uint8)
     cv2.circle(mask, (x, y), r, 1, -1)
     
-    mask = mask.astype(np.uint8)
-    print(type(img), img.shape, img.dtype)
-    print(type(mask), mask.shape, mask.dtype)
-    img = cv2.bitwise_and(img, img, mask=mask)
+    # Apply mask to each channel properly
+    if len(img.shape) == 3:
+        mask_3ch = np.stack([mask, mask, mask], axis=-1)
+        img = img * mask_3ch
+    else:
+        img = cv2.bitwise_and(img, img, mask=mask)
+    
     return crop_image(img)
-
 
 def preprocess_image(image, target_size=(320, 320)):
     """
@@ -101,28 +110,28 @@ def preprocess_image(image, target_size=(320, 320)):
     """
     image_np = np.array(image)
     # Ensure RGB format
-    if len(image.shape) == 2:
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    elif image.shape[2] == 4:
-        image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
+    if len(image_np.shape) == 2:
+        image_np = cv2.cvtColor(image_np, cv2.COLOR_GRAY2RGB)
+    elif image_np.shape[2] == 4:
+        image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2RGB)
     
     # Circle crop
-    image = circle_crop(image)
+    image_np = circle_crop(image_np)
     
     # Resize
-    image = cv2.resize(image, target_size)
+    image_np = cv2.resize(image_np, target_size)
     
     # Ben Graham's preprocessing - subtract local average color
-    image = cv2.addWeighted(
-        image, 4, 
-        cv2.GaussianBlur(image, (0, 0), 10), -4, 
+    image_np = cv2.addWeighted(
+        image_np, 4, 
+        cv2.GaussianBlur(image_np, (0, 0), 10), -4, 
         128
     )
     
     # Normalize to [0, 1]
-    image = image.astype(np.float32) / 255.0
+    image_np = image_np.astype(np.float32) / 255.0
     
-    return image
+    return image_np
 
 
 def make_gradcam_heatmap(img_array, model, last_conv_layer_name='top_conv', pred_index=None):
