@@ -50,7 +50,17 @@ def load_model(model_path='dr_model.h5'):
 
 def crop_image(img, tol=7):
     """Remove black borders from fundus image"""
+    # Ensure it's a numpy array
     img = np.array(img)
+    
+    # Ensure uint8 type for proper processing
+    if img.dtype != np.uint8:
+        if img.dtype == np.float32 or img.dtype == np.float64:
+            img = np.clip(img * 255, 0, 255).astype(np.uint8)
+        else:
+            img = img.astype(np.uint8)
+    
+    # Get grayscale for mask creation
     if len(img.shape) == 2:
         gray = img
     else:
@@ -59,25 +69,36 @@ def crop_image(img, tol=7):
     mask = gray > tol
     if not mask.any():
         return img
+    
     # Find the bounding box of the mask
-    coords = np.argwhere(mask)  # returns N x 2 array of (row, col)
+    coords = np.argwhere(mask)
     y0, x0 = coords.min(axis=0)
-    y1, x1 = coords.max(axis=0) + 1  # slices are exclusive at the end
-
+    y1, x1 = coords.max(axis=0) + 1
+    
     return img[y0:y1, x0:x1]
 
 
 def circle_crop(img):
     """Apply circular crop to fundus image"""
+    # Ensure it's a numpy array with correct type
     img = np.array(img)
+    
+    # Convert to uint8 if needed
+    if img.dtype != np.uint8:
+        if img.dtype == np.float32 or img.dtype == np.float64:
+            img = np.clip(img * 255, 0, 255).astype(np.uint8)
+        else:
+            img = img.astype(np.uint8)
     
     # Ensure RGB format before processing
     if len(img.shape) == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-    elif img.shape[2] == 4:
+    elif len(img.shape) == 3 and img.shape[2] == 4:
         img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
     
+    # Crop black borders first
     img = crop_image(img)
+    
     h, w = img.shape[:2]
     side = max(h, w)
     
@@ -85,20 +106,23 @@ def circle_crop(img):
     img = cv2.resize(img, (side, side))
     
     # Create circular mask
-    x, y = side // 2, side // 2
-    r = min(x, y)
+    center_x, center_y = side // 2, side // 2
+    radius = min(center_x, center_y)
     
-    mask = np.zeros((side, side), np.uint8)
-    cv2.circle(mask, (x, y), r, 1, -1)
+    # Create mask
+    mask = np.zeros((side, side), dtype=np.uint8)
+    cv2.circle(mask, (center_x, center_y), radius, 1, -1)
     
-    # Apply mask to each channel properly
-    if len(img.shape) == 3:
-        mask_3ch = np.stack([mask, mask, mask], axis=-1)
-        img = img * mask_3ch
-    else:
-        img = cv2.bitwise_and(img, img, mask=mask)
+    # Apply mask - expand mask to 3 channels
+    mask_3ch = cv2.merge([mask, mask, mask])
+    img_masked = img * mask_3ch
     
-    return crop_image(img)
+    # Convert back to uint8 to ensure proper type
+    img_masked = img_masked.astype(np.uint8)
+    
+    # Crop the black borders again after masking
+    return crop_image(img_masked)
+
 
 def preprocess_image(image, target_size=(320, 320)):
     """
@@ -108,17 +132,26 @@ def preprocess_image(image, target_size=(320, 320)):
     3. Ben Graham's preprocessing (contrast enhancement)
     4. Normalize to [0, 1]
     """
+    # Ensure it's a numpy array
     image_np = np.array(image)
+    
+    # Convert to uint8 if needed
+    if image_np.dtype != np.uint8:
+        if image_np.dtype == np.float32 or image_np.dtype == np.float64:
+            image_np = np.clip(image_np * 255, 0, 255).astype(np.uint8)
+        else:
+            image_np = image_np.astype(np.uint8)
+    
     # Ensure RGB format
     if len(image_np.shape) == 2:
         image_np = cv2.cvtColor(image_np, cv2.COLOR_GRAY2RGB)
-    elif image_np.shape[2] == 4:
+    elif len(image_np.shape) == 3 and image_np.shape[2] == 4:
         image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2RGB)
     
     # Circle crop
     image_np = circle_crop(image_np)
     
-    # Resize
+    # Resize to target size
     image_np = cv2.resize(image_np, target_size)
     
     # Ben Graham's preprocessing - subtract local average color
@@ -127,6 +160,9 @@ def preprocess_image(image, target_size=(320, 320)):
         cv2.GaussianBlur(image_np, (0, 0), 10), -4, 
         128
     )
+    
+    # Ensure values are in valid range after preprocessing
+    image_np = np.clip(image_np, 0, 255).astype(np.uint8)
     
     # Normalize to [0, 1]
     image_np = image_np.astype(np.float32) / 255.0
@@ -138,39 +174,48 @@ def make_gradcam_heatmap(img_array, model, last_conv_layer_name='top_conv', pred
     """
     Generate GradCAM heatmap for model interpretation
     """
-    # Create a model that maps the input image to the activations of the last conv layer
-    grad_model = Model(
-        [model.inputs],
-        [model.get_layer(last_conv_layer_name).output, model.output]
-    )
-    
-    # Compute the gradient of the predicted class with respect to the output feature map
-    with tf.GradientTape() as tape:
-        conv_outputs, predictions = grad_model(img_array)
-        if pred_index is None:
-            pred_index = tf.argmax(predictions[0])
-        class_channel = predictions[:, 0]  # Regression output
-    
-    # Gradient of the output neuron with respect to the output feature map
-    grads = tape.gradient(class_channel, conv_outputs)
-    
-    # Mean intensity of the gradient over each feature map channel
-    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-    
-    # Weight the channels by their importance
-    conv_outputs = conv_outputs[0]
-    heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
-    heatmap = tf.squeeze(heatmap)
-    
-    # Normalize the heatmap
-    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
-    return heatmap.numpy()
+    try:
+        # Create a model that maps the input image to the activations of the last conv layer
+        grad_model = Model(
+            [model.inputs],
+            [model.get_layer(last_conv_layer_name).output, model.output]
+        )
+        
+        # Compute the gradient of the predicted class with respect to the output feature map
+        with tf.GradientTape() as tape:
+            conv_outputs, predictions = grad_model(img_array)
+            if pred_index is None:
+                pred_index = tf.argmax(predictions[0])
+            class_channel = predictions[:, 0]  # Regression output
+        
+        # Gradient of the output neuron with respect to the output feature map
+        grads = tape.gradient(class_channel, conv_outputs)
+        
+        # Mean intensity of the gradient over each feature map channel
+        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+        
+        # Weight the channels by their importance
+        conv_outputs = conv_outputs[0]
+        heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
+        heatmap = tf.squeeze(heatmap)
+        
+        # Normalize the heatmap
+        heatmap = tf.maximum(heatmap, 0) / (tf.math.reduce_max(heatmap) + 1e-10)
+        return heatmap.numpy()
+    except Exception as e:
+        print(f"Error generating GradCAM: {e}")
+        # Return a blank heatmap if GradCAM fails
+        return np.zeros((img_array.shape[1], img_array.shape[2]))
 
 
 def overlay_gradcam(image, heatmap, alpha=0.4, colormap=cv2.COLORMAP_JET):
     """
     Overlay GradCAM heatmap on original image
     """
+    # Ensure image is uint8
+    if image.dtype == np.float32 or image.dtype == np.float64:
+        image = np.clip(image * 255, 0, 255).astype(np.uint8)
+    
     # Resize heatmap to match image size
     heatmap = cv2.resize(heatmap, (image.shape[1], image.shape[0]))
     
@@ -180,10 +225,6 @@ def overlay_gradcam(image, heatmap, alpha=0.4, colormap=cv2.COLORMAP_JET):
     
     # Convert to RGB
     heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
-    
-    # Ensure image is in correct format
-    if image.dtype == np.float32 or image.dtype == np.float64:
-        image = np.uint8(255 * image)
     
     # Overlay heatmap on image
     superimposed = cv2.addWeighted(image, 1 - alpha, heatmap, alpha, 0)
@@ -291,14 +332,14 @@ def get_stage_recommendations(stage_name):
 
 def create_comparison_image(original, processed, gradcam):
     """Create a side-by-side comparison image"""
+    # Ensure all images are uint8
+    if original.dtype == np.float32 or original.dtype == np.float64:
+        original = np.clip(original * 255, 0, 255).astype(np.uint8)
+    if processed.dtype == np.float32 or processed.dtype == np.float64:
+        processed = np.clip(processed * 255, 0, 255).astype(np.uint8)
+    
     # Ensure all images are the same size
     h, w = processed.shape[:2]
-    
-    if original.dtype == np.float32 or original.dtype == np.float64:
-        original = np.uint8(255 * original)
-    if processed.dtype == np.float32 or processed.dtype == np.float64:
-        processed = np.uint8(255 * processed)
-    
     original = cv2.resize(original, (w, h))
     
     # Create comparison
