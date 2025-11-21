@@ -20,33 +20,33 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS Styling for Professional Look ---
+# --- CSS Styling with JavaScript Dark Mode Detection ---
 st.markdown("""
     <style>
+    /* Light Mode (Default) */
     :root {
-        --light-bg: #f8f9fa;
-        --light-card: #E8F1F5;
-        --light-text: #0B2545;
-        --dark-bg: #0a0e27;
-        --dark-card: #1a1f2e;
-        --dark-text: #ffffff;
-        --primary: #2A5C9E;
-        --primary-light: #64B5F6;
+        --bg-primary: #f8f9fa;
+        --bg-secondary: #e9ecef;
+        --bg-card: #E8F1F5;
+        --text-primary: #0B2545;
+        --text-secondary: #666;
+        --border-color: #2A5C9E;
+        --primary-color: #2A5C9E;
+        --accent-color: #64B5F6;
     }
 
-    /* Light Mode */
     [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
         background-attachment: fixed;
     }
 
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #e9ecef 0%, #dee2e6 100%);
+        background: linear-gradient(180deg, var(--bg-secondary) 0%, #dee2e6 100%);
     }
 
     .card {
-        background-color: #E8F1F5;
-        color: #0B2545;
+        background-color: var(--bg-card);
+        color: var(--text-primary);
         padding: 20px;
         border-radius: 12px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -54,18 +54,18 @@ st.markdown("""
     }
 
     .stButton > button {
-        background-color: #E8F1F5;
-        color: #0B2545;
+        background-color: var(--bg-card);
+        color: var(--text-primary);
         border-radius: 8px;
         padding: 0.5em 1em;
         margin-top: 5px;
         font-weight: 500;
-        border: 1px solid #2A5C9E;
+        border: 1px solid var(--border-color);
     }
 
     .stButton > button:hover {
         background-color: #D4E9F7;
-        color: #0B2545;
+        color: var(--text-primary);
     }
 
     .stRadio > div {
@@ -73,8 +73,8 @@ st.markdown("""
     }
 
     details {
-        background-color: #E8F1F5;
-        color: #0B2545;
+        background-color: var(--bg-card);
+        color: var(--text-primary);
         padding: 10px;
         border-radius: 8px;
         margin-bottom: 10px;
@@ -83,7 +83,7 @@ st.markdown("""
     summary {
         font-weight: bold;
         cursor: pointer;
-        color: #0B2545;
+        color: var(--text-primary);
     }
 
     img {
@@ -98,8 +98,8 @@ st.markdown("""
         padding: 15px;
         border-radius: 8px;
         margin: 10px 0;
-        color: #0B2545;
-        border-left: 4px solid #2A5C9E;
+        color: var(--text-primary);
+        border-left: 4px solid var(--border-color);
     }
 
     .result-box.critical {
@@ -128,17 +128,17 @@ st.markdown("""
 
     .stTextInput > div > div > input {
         background-color: white;
-        color: #0B2545;
+        color: var(--text-primary);
     }
 
     .stSelectbox > div > div > select {
         background-color: white;
-        color: #0B2545;
+        color: var(--text-primary);
     }
 
     .streamlit-expanderHeader {
-        background-color: #E8F1F5 !important;
-        color: #0B2545 !important;
+        background-color: var(--bg-card) !important;
+        color: var(--text-primary) !important;
     }
 
     .stTabs [data-baseweb="tab-list"] {
@@ -146,205 +146,212 @@ st.markdown("""
     }
 
     .stTabs [data-baseweb="tab"] {
-        background-color: #E8F1F5;
-        color: #0B2545;
+        background-color: var(--bg-card);
+        color: var(--text-primary);
         border-radius: 8px 8px 0 0;
         padding: 10px 20px;
     }
 
     .stTabs [aria-selected="true"] {
-        background-color: #2A5C9E;
+        background-color: var(--primary-color);
         color: white;
     }
 
-    /* Override default Streamlit element colors for light mode */
-    [data-testid="stMarkdownContainer"] p {
-        color: #0B2545;
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--text-primary);
     }
 
-    /* ============ DARK MODE OVERRIDES ============ */
-    @media (prefers-color-scheme: dark) {
-        [data-testid="stAppViewContainer"] {
-            background: #0a0e27 !important;
-            background-attachment: fixed !important;
-        }
+    p, span, div, label {
+        color: var(--text-primary);
+    }
 
-        [data-testid="stSidebar"] {
-            background: #0f1419 !important;
-        }
+    /* ============ DARK MODE CSS VARIABLES ============ */
+    html.dark-mode {
+        --bg-primary: #0a0e27;
+        --bg-secondary: #0f1419;
+        --bg-card: #1a1f2e;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+        --border-color: #2a5c9e;
+        --primary-color: #2a5c9e;
+        --accent-color: #64B5F6;
+    }
 
-        .main {
-            background: #0a0e27 !important;
-        }
+    html.dark-mode [data-testid="stAppViewContainer"] {
+        background: #0a0e27 !important;
+        background-attachment: fixed;
+    }
 
-        /* Streamlit default elements */
-        .stApp {
-            background: #0a0e27 !important;
-        }
+    html.dark-mode [data-testid="stSidebar"] {
+        background: #0f1419 !important;
+    }
 
-        .stMarkdown {
-            color: #ffffff !important;
-        }
+    html.dark-mode .card {
+        background-color: #1a1f2e !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2);
+        border: 1px solid #2a5c9e;
+    }
 
-        [data-testid="stMarkdownContainer"] {
-            color: #ffffff !important;
-        }
+    html.dark-mode .stButton > button {
+        background-color: #2a5c9e !important;
+        color: #ffffff !important;
+        border: 1px solid #64B5F6 !important;
+    }
 
-        [data-testid="stMarkdownContainer"] h1,
-        [data-testid="stMarkdownContainer"] h2,
-        [data-testid="stMarkdownContainer"] h3,
-        [data-testid="stMarkdownContainer"] h4,
-        [data-testid="stMarkdownContainer"] h5,
-        [data-testid="stMarkdownContainer"] h6 {
-            color: #64B5F6 !important;
-        }
+    html.dark-mode .stButton > button:hover {
+        background-color: #3d7cc2 !important;
+        color: white !important;
+    }
 
-        [data-testid="stMarkdownContainer"] p {
-            color: #ffffff !important;
-        }
+    html.dark-mode details {
+        background-color: #1a1f2e !important;
+        color: #ffffff !important;
+        border: 1px solid #2a5c9e !important;
+    }
 
-        /* Custom card */
-        .card {
-            background-color: #1a1f2e !important;
-            color: #ffffff !important;
-            box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2) !important;
-            border: 1px solid #2a5c9e !important;
-        }
+    html.dark-mode summary {
+        color: #64B5F6 !important;
+    }
 
-        /* Buttons */
-        .stButton > button {
-            background-color: #2a5c9e !important;
-            color: #ffffff !important;
-            border: 1px solid #64B5F6 !important;
-        }
+    html.dark-mode .result-box {
+        background-color: #1a1f2e !important;
+        color: #ffffff !important;
+        border-left: 4px solid #64B5F6 !important;
+        border: 1px solid #2a5c9e !important;
+    }
 
-        .stButton > button:hover {
-            background-color: #3d7cc2 !important;
-            color: white !important;
-        }
+    html.dark-mode .result-box.critical {
+        background-color: #3a1a1a !important;
+        color: #ff9999 !important;
+        border-left: 4px solid #ff6b6b !important;
+        border: 1px solid #8b3a3a !important;
+    }
 
-        /* Details/Accordion */
-        details {
-            background-color: #1a1f2e !important;
-            color: #ffffff !important;
-            border: 1px solid #2a5c9e !important;
-        }
+    html.dark-mode .result-box.high {
+        background-color: #3a2a1a !important;
+        color: #ffb74d !important;
+        border-left: 4px solid #ffb74d !important;
+        border: 1px solid #8b6a3a !important;
+    }
 
-        summary {
-            color: #64B5F6 !important;
-            font-weight: bold !important;
-        }
+    html.dark-mode .result-box.medium {
+        background-color: #3a3a1a !important;
+        color: #ffd54f !important;
+        border-left: 4px solid #ffd54f !important;
+        border: 1px solid #8b8a3a !important;
+    }
 
-        /* Result boxes */
-        .result-box {
-            background-color: #1a1f2e !important;
-            color: #ffffff !important;
-            border-left: 4px solid #64B5F6 !important;
-            border: 1px solid #2a5c9e !important;
-        }
+    html.dark-mode .result-box.low {
+        background-color: #1a3a1a !important;
+        color: #81c784 !important;
+        border-left: 4px solid #81c784 !important;
+        border: 1px solid #3a7a3a !important;
+    }
 
-        .result-box.critical {
-            background-color: #3a1a1a !important;
-            color: #ff9999 !important;
-            border-left: 4px solid #ff6b6b !important;
-            border: 1px solid #8b3a3a !important;
-        }
+    html.dark-mode .stTextInput > div > div > input {
+        background-color: #1a1f2e !important;
+        color: #ffffff !important;
+        border-color: #64B5F6 !important;
+    }
 
-        .result-box.high {
-            background-color: #3a2a1a !important;
-            color: #ffb74d !important;
-            border-left: 4px solid #ffb74d !important;
-            border: 1px solid #8b6a3a !important;
-        }
+    html.dark-mode .stSelectbox > div > div > select {
+        background-color: #1a1f2e !important;
+        color: #ffffff !important;
+        border-color: #64B5F6 !important;
+    }
 
-        .result-box.medium {
-            background-color: #3a3a1a !important;
-            color: #ffd54f !important;
-            border-left: 4px solid #ffd54f !important;
-            border: 1px solid #8b8a3a !important;
-        }
+    html.dark-mode .streamlit-expanderHeader {
+        background-color: #2a3f4f !important;
+        color: #ffffff !important;
+    }
 
-        .result-box.low {
-            background-color: #1a3a1a !important;
-            color: #81c784 !important;
-            border-left: 4px solid #81c784 !important;
-            border: 1px solid #3a7a3a !important;
-        }
+    html.dark-mode .stTabs [data-baseweb="tab"] {
+        background-color: #1a1f2e !important;
+        color: #ffffff !important;
+    }
 
-        /* Input fields */
-        .stTextInput > div > div > input {
-            background-color: #1a1f2e !important;
-            color: #ffffff !important;
-            border-color: #64B5F6 !important;
-        }
+    html.dark-mode .stTabs [aria-selected="true"] {
+        background-color: #2a5c9e !important;
+        color: #ffffff !important;
+    }
 
-        .stSelectbox > div > div > select {
-            background-color: #1a1f2e !important;
-            color: #ffffff !important;
-            border-color: #64B5F6 !important;
-        }
+    html.dark-mode h1, 
+    html.dark-mode h2, 
+    html.dark-mode h3, 
+    html.dark-mode h4, 
+    html.dark-mode h5, 
+    html.dark-mode h6 {
+        color: #64B5F6 !important;
+    }
 
-        /* Expander header */
-        .streamlit-expanderHeader {
-            background-color: #2a3f4f !important;
-            color: #ffffff !important;
-        }
+    html.dark-mode p, 
+    html.dark-mode span, 
+    html.dark-mode div, 
+    html.dark-mode label {
+        color: #ffffff !important;
+    }
 
-        /* Tabs */
-        .stTabs [data-baseweb="tab"] {
-            background-color: #1a1f2e !important;
-            color: #ffffff !important;
-        }
+    html.dark-mode [data-testid="stInfo"] {
+        background-color: #1a2540 !important;
+    }
 
-        .stTabs [aria-selected="true"] {
-            background-color: #2a5c9e !important;
-            color: #ffffff !important;
-        }
+    html.dark-mode [data-testid="stWarning"] {
+        background-color: #3a2a1a !important;
+    }
 
-        /* Headings */
-        h1, h2, h3, h4, h5, h6 {
-            color: #64B5F6 !important;
-        }
+    html.dark-mode [data-testid="stError"] {
+        background-color: #3a1a1a !important;
+    }
 
-        /* Paragraphs and text */
-        p, span, div {
-            color: #ffffff !important;
-        }
-
-        /* Info boxes */
-        [data-testid="stInfo"] {
-            background-color: #1a2540 !important;
-        }
-
-        [data-testid="stInfo"] p {
-            color: #64B5F6 !important;
-        }
-
-        [data-testid="stWarning"] {
-            background-color: #3a2a1a !important;
-        }
-
-        [data-testid="stWarning"] p {
-            color: #ffb74d !important;
-        }
-
-        [data-testid="stError"] {
-            background-color: #3a1a1a !important;
-        }
-
-        [data-testid="stError"] p {
-            color: #ff9999 !important;
-        }
-
-        [data-testid="stSuccess"] {
-            background-color: #1a3a1a !important;
-        }
-
-        [data-testid="stSuccess"] p {
-            color: #81c784 !important;
-        }
+    html.dark-mode [data-testid="stSuccess"] {
+        background-color: #1a3a1a !important;
     }
     </style>
+
+    <script>
+    function detectStreamlitTheme() {
+        // Wait for Streamlit to load
+        if (window.streamlit === undefined) {
+            setTimeout(detectStreamlitTheme, 100);
+            return;
+        }
+
+        function applyTheme() {
+            // Check if dark mode is enabled in Streamlit config
+            const htmlElement = document.documentElement;
+            const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            // Also check Streamlit's internal theme state
+            const streamlitConfig = window.streamlit?.config?.theme?.base;
+            
+            if (isDarkMode || streamlitConfig === 'dark') {
+                htmlElement.classList.add('dark-mode');
+                htmlElement.classList.remove('light-mode');
+            } else {
+                htmlElement.classList.remove('dark-mode');
+                htmlElement.classList.add('light-mode');
+            }
+        }
+
+        // Apply theme on load
+        applyTheme();
+
+        // Watch for theme changes
+        if (window.matchMedia) {
+            const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            darkModeQuery.addListener((e) => {
+                applyTheme();
+            });
+        }
+
+        // Also check periodically in case Streamlit updates theme
+        setInterval(applyTheme, 1000);
+    }
+
+    // Start detection
+    detectStreamlitTheme();
+    </script>
 """, unsafe_allow_html=True)
 
 # Initialize session state
