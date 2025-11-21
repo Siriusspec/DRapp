@@ -177,6 +177,13 @@ st.markdown("""
         --accent-color: #64B5F6;
     }
 
+    html.dark-mode,
+    html.dark-mode body,
+    html.dark-mode .stApp,
+    html.dark-mode .main {
+        background: #0a0e27 !important;
+    }
+
     html.dark-mode [data-testid="stAppViewContainer"] {
         background: #0a0e27 !important;
         background-attachment: fixed;
@@ -184,6 +191,18 @@ st.markdown("""
 
     html.dark-mode [data-testid="stSidebar"] {
         background: #0f1419 !important;
+    }
+
+    html.dark-mode [data-testid="stDecoration"] {
+        background: #0a0e27 !important;
+    }
+
+    html.dark-mode section[data-testid="stSidebar"] {
+        background: #0f1419 !important;
+    }
+
+    html.dark-mode [data-testid="stVerticalBlock"] {
+        background: transparent;
     }
 
     html.dark-mode .card {
@@ -318,19 +337,23 @@ st.markdown("""
         }
 
         function applyTheme() {
-            // Check if dark mode is enabled in Streamlit config
             const htmlElement = document.documentElement;
             const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             
             // Also check Streamlit's internal theme state
             const streamlitConfig = window.streamlit?.config?.theme?.base;
             
+            console.log("Theme detected - isDarkMode:", isDarkMode, "streamlitConfig:", streamlitConfig);
+            
             if (isDarkMode || streamlitConfig === 'dark') {
                 htmlElement.classList.add('dark-mode');
                 htmlElement.classList.remove('light-mode');
+                // Force dark background on body
+                document.body.style.backgroundColor = '#0a0e27';
             } else {
                 htmlElement.classList.remove('dark-mode');
                 htmlElement.classList.add('light-mode');
+                document.body.style.backgroundColor = '#f8f9fa';
             }
         }
 
@@ -341,16 +364,18 @@ st.markdown("""
         if (window.matchMedia) {
             const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
             darkModeQuery.addListener((e) => {
+                console.log("Theme changed");
                 applyTheme();
             });
         }
 
-        // Also check periodically in case Streamlit updates theme
-        setInterval(applyTheme, 1000);
+        // Check periodically
+        setInterval(applyTheme, 500);
     }
 
-    // Start detection
+    // Start detection immediately and on document ready
     detectStreamlitTheme();
+    document.addEventListener('DOMContentLoaded', detectStreamlitTheme);
     </script>
 """, unsafe_allow_html=True)
 
