@@ -33,11 +33,6 @@ st.markdown("""
         background: linear-gradient(180deg, #e9ecef 0%, #dee2e6 100%);
     }
 
-    body {
-        background-color: #0B2545;
-        color: #0B2545;
-    }
-
     .card {
         background-color: #E8F1F5;
         color: #0B2545;
@@ -155,20 +150,22 @@ st.markdown("""
         color: #0B2545;
     }
 
-    /* Light mode text for info boxes */
-    .stInfo, .stWarning, .stError, .stSuccess {
-        border-radius: 8px;
-    }
-
-     /* DARK MODE STYLES */
+    /* DARK MODE STYLES */
     @media (prefers-color-scheme: dark) {
         [data-testid="stAppViewContainer"] {
-            background: #0a0e27;
-            background-attachment: fixed;
+            background: #0a0e27 !important;
         }
 
         [data-testid="stSidebar"] {
-            background: #0f1419;
+            background: #0f1419 !important;
+        }
+
+        [data-testid="stDecoration"] {
+            display: none;
+        }
+
+        .stApp {
+            background: #0a0e27 !important;
         }
 
         body {
@@ -177,78 +174,78 @@ st.markdown("""
         }
 
         .card {
-            background-color: #1a1f2e;
-            color: #ffffff;
+            background-color: #1a1f2e !important;
+            color: #ffffff !important;
             box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2);
             border: 1px solid #2a5c9e;
         }
 
         .stButton > button {
-            background-color: #2a5c9e;
-            color: #ffffff;
-            border: 1px solid #64B5F6;
+            background-color: #2a5c9e !important;
+            color: #ffffff !important;
+            border: 1px solid #64B5F6 !important;
         }
 
         .stButton > button:hover {
-            background-color: #3d7cc2;
-            color: white;
+            background-color: #3d7cc2 !important;
+            color: white !important;
         }
 
         details {
-            background-color: #1a1f2e;
-            color: #ffffff;
-            border: 1px solid #2a5c9e;
+            background-color: #1a1f2e !important;
+            color: #ffffff !important;
+            border: 1px solid #2a5c9e !important;
         }
 
         summary {
-            color: #64B5F6;
-            font-weight: bold;
+            color: #64B5F6 !important;
+            font-weight: bold !important;
         }
 
         .result-box {
-            background-color: #1a1f2e;
-            color: #ffffff;
-            border-left: 4px solid #64B5F6;
-            border: 1px solid #2a5c9e;
+            background-color: #1a1f2e !important;
+            color: #ffffff !important;
+            border-left: 4px solid #64B5F6 !important;
+            border: 1px solid #2a5c9e !important;
         }
 
         .result-box.critical {
-            background-color: #3a1a1a;
-            color: #ff9999;
-            border-left: 4px solid #ff6b6b;
-            border: 1px solid #8b3a3a;
+            background-color: #3a1a1a !important;
+            color: #ff9999 !important;
+            border-left: 4px solid #ff6b6b !important;
+            border: 1px solid #8b3a3a !important;
         }
 
         .result-box.high {
-            background-color: #3a2a1a;
-            color: #ffb74d;
-            border-left: 4px solid #ffb74d;
-            border: 1px solid #8b6a3a;
+            background-color: #3a2a1a !important;
+            color: #ffb74d !important;
+            border-left: 4px solid #ffb74d !important;
+            border: 1px solid #8b6a3a !important;
         }
 
         .result-box.medium {
-            background-color: #3a3a1a;
-            color: #ffd54f;
-            border-left: 4px solid #ffd54f;
-            border: 1px solid #8b8a3a;
+            background-color: #3a3a1a !important;
+            color: #ffd54f !important;
+            border-left: 4px solid #ffd54f !important;
+            border: 1px solid #8b8a3a !important;
         }
 
         .result-box.low {
-            background-color: #1a3a1a;
-            color: #81c784;
-            border-left: 4px solid #81c784;
-            border: 1px solid #3a7a3a;
+            background-color: #1a3a1a !important;
+            color: #81c784 !important;
+            border-left: 4px solid #81c784 !important;
+            border: 1px solid #3a7a3a !important;
         }
 
         .stTextInput > div > div > input {
-            background-color: #1a1f2e;
-            color: #ffffff;
+            background-color: #1a1f2e !important;
+            color: #ffffff !important;
             border-color: #64B5F6 !important;
         }
 
         .stSelectbox > div > div > select {
-            background-color: #1a1f2e;
-            color: #ffffff;
+            background-color: #1a1f2e !important;
+            color: #ffffff !important;
             border-color: #64B5F6 !important;
         }
 
@@ -258,25 +255,47 @@ st.markdown("""
         }
 
         .stTabs [data-baseweb="tab"] {
-            background-color: #1a1f2e;
-            color: #ffffff;
+            background-color: #1a1f2e !important;
+            color: #ffffff !important;
         }
 
         .stTabs [aria-selected="true"] {
-            background-color: #2a5c9e;
-            color: #ffffff;
+            background-color: #2a5c9e !important;
+            color: #ffffff !important;
         }
 
         h1, h2, h3 {
-            color: #64B5F6;
+            color: #64B5F6 !important;
         }
 
         p, span {
-            color: #ffffff;
+            color: #ffffff !important;
+        }
+
+        /* Info/Warning/Error boxes */
+        [data-testid="stInfo"] {
+            background-color: #1a1f2e !important;
+            color: #ffffff !important;
+        }
+
+        [data-testid="stWarning"] {
+            background-color: #3a2a1a !important;
+            color: #ffb74d !important;
+        }
+
+        [data-testid="stError"] {
+            background-color: #3a1a1a !important;
+            color: #ff9999 !important;
+        }
+
+        [data-testid="stSuccess"] {
+            background-color: #1a3a1a !important;
+            color: #81c784 !important;
         }
     }
     </style>
 """, unsafe_allow_html=True)
+
 # Initialize session state
 if "uploaded_image" not in st.session_state:
     st.session_state.uploaded_image = None
