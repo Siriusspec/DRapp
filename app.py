@@ -160,103 +160,111 @@ st.markdown("""
         border-radius: 8px;
     }
 
-    /* DARK MODE STYLES */
+     /* DARK MODE STYLES */
     @media (prefers-color-scheme: dark) {
         [data-testid="stAppViewContainer"] {
-            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            background: #0a0e27;
             background-attachment: fixed;
         }
 
         [data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #1a1f2e 0%, #252d3d 100%);
+            background: #0f1419;
         }
 
         body {
-            background-color: #f0f0f0;
-            color: #e0e0e0;
+            background-color: #0a0e27;
+            color: #ffffff;
         }
 
         .card {
-            background-color: #1e3a5f;
-            color: #e0e0e0;
+            background-color: #1a1f2e;
+            color: #ffffff;
             box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2);
+            border: 1px solid #2a5c9e;
         }
 
         .stButton > button {
-            background-color: #1e3a5f;
-            color: #64B5F6;
+            background-color: #2a5c9e;
+            color: #ffffff;
             border: 1px solid #64B5F6;
         }
 
         .stButton > button:hover {
-            background-color: #2a7dd9;
+            background-color: #3d7cc2;
             color: white;
         }
 
         details {
-            background-color: #1e3a5f;
-            color: #e0e0e0;
+            background-color: #1a1f2e;
+            color: #ffffff;
+            border: 1px solid #2a5c9e;
         }
 
         summary {
             color: #64B5F6;
+            font-weight: bold;
         }
 
         .result-box {
-            background-color: #1e3a5f;
-            color: #e0e0e0;
+            background-color: #1a1f2e;
+            color: #ffffff;
             border-left: 4px solid #64B5F6;
+            border: 1px solid #2a5c9e;
         }
 
         .result-box.critical {
-            background-color: #4a2020;
+            background-color: #3a1a1a;
             color: #ff9999;
             border-left: 4px solid #ff6b6b;
+            border: 1px solid #8b3a3a;
         }
 
         .result-box.high {
-            background-color: #4a3820;
+            background-color: #3a2a1a;
             color: #ffb74d;
             border-left: 4px solid #ffb74d;
+            border: 1px solid #8b6a3a;
         }
 
         .result-box.medium {
-            background-color: #4a4620;
+            background-color: #3a3a1a;
             color: #ffd54f;
             border-left: 4px solid #ffd54f;
+            border: 1px solid #8b8a3a;
         }
 
         .result-box.low {
-            background-color: #1b3a1b;
+            background-color: #1a3a1a;
             color: #81c784;
             border-left: 4px solid #81c784;
+            border: 1px solid #3a7a3a;
         }
 
         .stTextInput > div > div > input {
-            background-color: #2d2d2d;
-            color: #e0e0e0;
+            background-color: #1a1f2e;
+            color: #ffffff;
             border-color: #64B5F6 !important;
         }
 
         .stSelectbox > div > div > select {
-            background-color: #2d2d2d;
-            color: #e0e0e0;
+            background-color: #1a1f2e;
+            color: #ffffff;
             border-color: #64B5F6 !important;
         }
 
         .streamlit-expanderHeader {
-            background-color: #1e3a5f !important;
-            color: #e0e0e0 !important;
+            background-color: #2a3f4f !important;
+            color: #ffffff !important;
         }
 
         .stTabs [data-baseweb="tab"] {
-            background-color: #1e3a5f;
-            color: #e0e0e0;
+            background-color: #1a1f2e;
+            color: #ffffff;
         }
 
         .stTabs [aria-selected="true"] {
-            background-color: #64B5F6;
-            color: #0B2545;
+            background-color: #2a5c9e;
+            color: #ffffff;
         }
 
         h1, h2, h3 {
@@ -264,12 +272,11 @@ st.markdown("""
         }
 
         p, span {
-            color: #e0e0e0;
+            color: #ffffff;
         }
     }
     </style>
 """, unsafe_allow_html=True)
-
 # Initialize session state
 if "uploaded_image" not in st.session_state:
     st.session_state.uploaded_image = None
