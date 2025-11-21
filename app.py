@@ -23,284 +23,253 @@ st.set_page_config(
 # --- CSS Styling for Professional Look (Dark Mode Compatible) ---
 st.markdown("""
     <style>
-    /* Light and Dark Mode Variables */
-    :root {
-        --primary-color: #2A5C9E;
-        --primary-light: #E8F1F5;
-        --primary-dark: #0B2545;
-        --text-dark: #0B2545;
-        --text-light: #FFFFFF;
-        --bg-secondary: #e9ecef;
-        --bg-tertiary: #dee2e6;
-        --border-color: #2A5C9E;
-    }
-    
-    /* Dark theme adjustments */
-    [data-theme="dark"] {
-        --primary-color: #64B5F6;
-        --primary-light: #1e3a5f;
-        --primary-dark: #f0f0f0;
-        --text-dark: #e0e0e0;
-        --text-light: #0B2545;
-        --bg-secondary: #1a1a1a;
-        --bg-tertiary: #252525;
-        --border-color: #64B5F6;
-    }
-    
-    /* Main page background */
+    /* Light Mode (Default) */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         background-attachment: fixed;
     }
-    
-    [data-theme="dark"] [data-testid="stAppViewContainer"] {
-        background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
-        background-attachment: fixed;
-    }
-    
-    /* Sidebar background */
+
     [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #e9ecef 0%, #dee2e6 100%);
     }
-    
-    [data-theme="dark"] [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a1f2e 0%, #252d3d 100%);
-    }
-    
+
     body {
-        color: var(--text-dark);
+        background-color: #0B2545;
+        color: #0B2545;
     }
-    
-    [data-theme="dark"] body {
-        color: var(--text-dark);
-    }
-    
+
     .card {
-        background-color: var(--primary-light);
-        color: var(--text-light);
+        background-color: #E8F1F5;
+        color: #0B2545;
         padding: 20px;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         margin-bottom: 20px;
     }
-    
-    [data-theme="dark"] .card {
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
-        box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2);
-    }
-    
+
     .stButton > button {
-        background-color: var(--primary-light);
-        color: var(--text-light);
+        background-color: #E8F1F5;
+        color: #0B2545;
         border-radius: 8px;
         padding: 0.5em 1em;
         margin-top: 5px;
         font-weight: 500;
-        border: 1px solid var(--border-color);
+        border: 1px solid #2A5C9E;
     }
-    
-    [data-theme="dark"] .stButton > button {
-        background-color: var(--primary-light);
-        color: var(--text-light);
-        border: 1px solid var(--border-color);
-    }
-    
+
     .stButton > button:hover {
         background-color: #D4E9F7;
-        color: var(--text-light);
+        color: #0B2545;
     }
-    
-    [data-theme="dark"] .stButton > button:hover {
-        background-color: #2a7dd9;
-        color: white;
-    }
-    
+
     .stRadio > div {
         flex-direction: column;
     }
-    
+
     details {
-        background-color: var(--primary-light);
-        color: var(--text-light);
+        background-color: #E8F1F5;
+        color: #0B2545;
         padding: 10px;
         border-radius: 8px;
         margin-bottom: 10px;
     }
-    
-    [data-theme="dark"] details {
-        background-color: var(--primary-light);
-        color: var(--text-light);
-    }
-    
+
     summary {
         font-weight: bold;
         cursor: pointer;
-        color: var(--text-light);
+        color: #0B2545;
     }
-    
-    [data-theme="dark"] summary {
-        color: var(--text-light);
-    }
-    
+
     img {
         max-width: 100%;
         border-radius: 8px;
         margin-top: 10px;
         margin-bottom: 10px;
     }
-    
+
     .result-box {
         background-color: #D4E9F7;
         padding: 15px;
         border-radius: 8px;
         margin: 10px 0;
-        color: var(--text-light);
-        border-left: 4px solid var(--border-color);
+        color: #0B2545;
+        border-left: 4px solid #2A5C9E;
     }
-    
-    [data-theme="dark"] .result-box {
-        background-color: #1e3a5f;
-        color: #e0e0e0;
-        border-left: 4px solid #64B5F6;
-    }
-    
+
     .result-box.critical {
         background-color: #FFE5E5;
         border-left: 4px solid #D32F2F;
         color: #333;
     }
-    
-    [data-theme="dark"] .result-box.critical {
-        background-color: #4a2020;
-        color: #ff9999;
-        border-left: 4px solid #ff6b6b;
-    }
-    
+
     .result-box.high {
         background-color: #FFF3E0;
         border-left: 4px solid #F57C00;
         color: #333;
     }
-    
-    [data-theme="dark"] .result-box.high {
-        background-color: #4a3820;
-        color: #ffb74d;
-        border-left: 4px solid #ffb74d;
-    }
-    
+
     .result-box.medium {
         background-color: #FFF9C4;
         border-left: 4px solid #FBC02D;
         color: #333;
     }
-    
-    [data-theme="dark"] .result-box.medium {
-        background-color: #4a4620;
-        color: #ffd54f;
-        border-left: 4px solid #ffd54f;
-    }
-    
+
     .result-box.low {
         background-color: #E8F5E9;
         border-left: 4px solid #388E3C;
         color: #333;
     }
-    
-    [data-theme="dark"] .result-box.low {
-        background-color: #1b3a1b;
-        color: #81c784;
-        border-left: 4px solid #81c784;
-    }
-    
+
     .stTextInput > div > div > input {
         background-color: white;
         color: #0B2545;
     }
-    
-    [data-theme="dark"] .stTextInput > div > div > input {
-        background-color: #2d2d2d;
-        color: #e0e0e0;
-        border-color: #64B5F6;
-    }
-    
+
     .stSelectbox > div > div > select {
         background-color: white;
         color: #0B2545;
     }
-    
-    [data-theme="dark"] .stSelectbox > div > div > select {
-        background-color: #2d2d2d;
-        color: #e0e0e0;
-        border-color: #64B5F6;
-    }
-    
+
     .streamlit-expanderHeader {
-        background-color: var(--primary-light) !important;
-        color: var(--text-light) !important;
+        background-color: #E8F1F5 !important;
+        color: #0B2545 !important;
     }
-    
-    [data-theme="dark"] .streamlit-expanderHeader {
-        background-color: #1e3a5f !important;
-        color: #e0e0e0 !important;
-    }
-    
+
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
     }
-    
+
     .stTabs [data-baseweb="tab"] {
-        background-color: var(--primary-light);
-        color: var(--text-light);
+        background-color: #E8F1F5;
+        color: #0B2545;
         border-radius: 8px 8px 0 0;
         padding: 10px 20px;
     }
-    
-    [data-theme="dark"] .stTabs [data-baseweb="tab"] {
-        background-color: #1e3a5f;
-        color: #e0e0e0;
-    }
-    
+
     .stTabs [aria-selected="true"] {
-        background-color: var(--border-color);
+        background-color: #2A5C9E;
         color: white;
     }
-    
-    [data-theme="dark"] .stTabs [aria-selected="true"] {
-        background-color: #64B5F6;
+
+    h1, h2, h3, p {
         color: #0B2545;
     }
-    
-    /* Header styling */
-    h1, h2, h3 {
-        color: var(--text-light);
-    }
-    
-    [data-theme="dark"] h1, 
-    [data-theme="dark"] h2, 
-    [data-theme="dark"] h3 {
-        color: #64B5F6;
-    }
-    
-    /* Paragraph text */
-    p {
-        color: var(--text-light);
-    }
-    
-    [data-theme="dark"] p {
-        color: #e0e0e0;
-    }
-    
-    /* Info boxes */
-    [data-testid="stInfo"], 
-    [data-testid="stWarning"], 
-    [data-testid="stError"], 
-    [data-testid="stSuccess"] {
+
+    /* Light mode text for info boxes */
+    .stInfo, .stWarning, .stError, .stSuccess {
         border-radius: 8px;
     }
-    
+
+    /* DARK MODE STYLES */
+    @media (prefers-color-scheme: dark) {
+        [data-testid="stAppViewContainer"] {
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+            background-attachment: fixed;
+        }
+
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #1a1f2e 0%, #252d3d 100%);
+        }
+
+        body {
+            background-color: #f0f0f0;
+            color: #e0e0e0;
+        }
+
+        .card {
+            background-color: #1e3a5f;
+            color: #e0e0e0;
+            box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2);
+        }
+
+        .stButton > button {
+            background-color: #1e3a5f;
+            color: #64B5F6;
+            border: 1px solid #64B5F6;
+        }
+
+        .stButton > button:hover {
+            background-color: #2a7dd9;
+            color: white;
+        }
+
+        details {
+            background-color: #1e3a5f;
+            color: #e0e0e0;
+        }
+
+        summary {
+            color: #64B5F6;
+        }
+
+        .result-box {
+            background-color: #1e3a5f;
+            color: #e0e0e0;
+            border-left: 4px solid #64B5F6;
+        }
+
+        .result-box.critical {
+            background-color: #4a2020;
+            color: #ff9999;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .result-box.high {
+            background-color: #4a3820;
+            color: #ffb74d;
+            border-left: 4px solid #ffb74d;
+        }
+
+        .result-box.medium {
+            background-color: #4a4620;
+            color: #ffd54f;
+            border-left: 4px solid #ffd54f;
+        }
+
+        .result-box.low {
+            background-color: #1b3a1b;
+            color: #81c784;
+            border-left: 4px solid #81c784;
+        }
+
+        .stTextInput > div > div > input {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            border-color: #64B5F6 !important;
+        }
+
+        .stSelectbox > div > div > select {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            border-color: #64B5F6 !important;
+        }
+
+        .streamlit-expanderHeader {
+            background-color: #1e3a5f !important;
+            color: #e0e0e0 !important;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            background-color: #1e3a5f;
+            color: #e0e0e0;
+        }
+
+        .stTabs [aria-selected="true"] {
+            background-color: #64B5F6;
+            color: #0B2545;
+        }
+
+        h1, h2, h3 {
+            color: #64B5F6;
+        }
+
+        p, span {
+            color: #e0e0e0;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
+
 # Initialize session state
 if "uploaded_image" not in st.session_state:
     st.session_state.uploaded_image = None
