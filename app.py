@@ -20,10 +20,21 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- CSS Styling for Professional Look (Dark Mode Compatible) ---
+# --- CSS Styling for Professional Look ---
 st.markdown("""
     <style>
-    /* Light Mode (Default) */
+    :root {
+        --light-bg: #f8f9fa;
+        --light-card: #E8F1F5;
+        --light-text: #0B2545;
+        --dark-bg: #0a0e27;
+        --dark-card: #1a1f2e;
+        --dark-text: #ffffff;
+        --primary: #2A5C9E;
+        --primary-light: #64B5F6;
+    }
+
+    /* Light Mode */
     [data-testid="stAppViewContainer"] {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         background-attachment: fixed;
@@ -146,40 +157,61 @@ st.markdown("""
         color: white;
     }
 
-    h1, h2, h3, p {
+    /* Override default Streamlit element colors for light mode */
+    [data-testid="stMarkdownContainer"] p {
         color: #0B2545;
     }
 
-    /* DARK MODE STYLES */
+    /* ============ DARK MODE OVERRIDES ============ */
     @media (prefers-color-scheme: dark) {
         [data-testid="stAppViewContainer"] {
             background: #0a0e27 !important;
+            background-attachment: fixed !important;
         }
 
         [data-testid="stSidebar"] {
             background: #0f1419 !important;
         }
 
-        [data-testid="stDecoration"] {
-            display: none;
+        .main {
+            background: #0a0e27 !important;
         }
 
+        /* Streamlit default elements */
         .stApp {
             background: #0a0e27 !important;
         }
 
-        body {
-            background-color: #0a0e27;
-            color: #ffffff;
+        .stMarkdown {
+            color: #ffffff !important;
         }
 
+        [data-testid="stMarkdownContainer"] {
+            color: #ffffff !important;
+        }
+
+        [data-testid="stMarkdownContainer"] h1,
+        [data-testid="stMarkdownContainer"] h2,
+        [data-testid="stMarkdownContainer"] h3,
+        [data-testid="stMarkdownContainer"] h4,
+        [data-testid="stMarkdownContainer"] h5,
+        [data-testid="stMarkdownContainer"] h6 {
+            color: #64B5F6 !important;
+        }
+
+        [data-testid="stMarkdownContainer"] p {
+            color: #ffffff !important;
+        }
+
+        /* Custom card */
         .card {
             background-color: #1a1f2e !important;
             color: #ffffff !important;
-            box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2);
-            border: 1px solid #2a5c9e;
+            box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2) !important;
+            border: 1px solid #2a5c9e !important;
         }
 
+        /* Buttons */
         .stButton > button {
             background-color: #2a5c9e !important;
             color: #ffffff !important;
@@ -191,6 +223,7 @@ st.markdown("""
             color: white !important;
         }
 
+        /* Details/Accordion */
         details {
             background-color: #1a1f2e !important;
             color: #ffffff !important;
@@ -202,6 +235,7 @@ st.markdown("""
             font-weight: bold !important;
         }
 
+        /* Result boxes */
         .result-box {
             background-color: #1a1f2e !important;
             color: #ffffff !important;
@@ -237,6 +271,7 @@ st.markdown("""
             border: 1px solid #3a7a3a !important;
         }
 
+        /* Input fields */
         .stTextInput > div > div > input {
             background-color: #1a1f2e !important;
             color: #ffffff !important;
@@ -249,11 +284,13 @@ st.markdown("""
             border-color: #64B5F6 !important;
         }
 
+        /* Expander header */
         .streamlit-expanderHeader {
             background-color: #2a3f4f !important;
             color: #ffffff !important;
         }
 
+        /* Tabs */
         .stTabs [data-baseweb="tab"] {
             background-color: #1a1f2e !important;
             color: #ffffff !important;
@@ -264,32 +301,46 @@ st.markdown("""
             color: #ffffff !important;
         }
 
-        h1, h2, h3 {
+        /* Headings */
+        h1, h2, h3, h4, h5, h6 {
             color: #64B5F6 !important;
         }
 
-        p, span {
+        /* Paragraphs and text */
+        p, span, div {
             color: #ffffff !important;
         }
 
-        /* Info/Warning/Error boxes */
+        /* Info boxes */
         [data-testid="stInfo"] {
-            background-color: #1a1f2e !important;
-            color: #ffffff !important;
+            background-color: #1a2540 !important;
+        }
+
+        [data-testid="stInfo"] p {
+            color: #64B5F6 !important;
         }
 
         [data-testid="stWarning"] {
             background-color: #3a2a1a !important;
+        }
+
+        [data-testid="stWarning"] p {
             color: #ffb74d !important;
         }
 
         [data-testid="stError"] {
             background-color: #3a1a1a !important;
+        }
+
+        [data-testid="stError"] p {
             color: #ff9999 !important;
         }
 
         [data-testid="stSuccess"] {
             background-color: #1a3a1a !important;
+        }
+
+        [data-testid="stSuccess"] p {
             color: #81c784 !important;
         }
     }
