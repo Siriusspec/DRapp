@@ -16,122 +16,291 @@ from model_utils import (
 # Page config
 st.set_page_config(
     page_title="DR Detection System",
-    page_icon="👁️",
+    page_icon="",
     layout="wide"
 )
 
-# --- CSS Styling for Professional Look ---
+# --- CSS Styling for Professional Look (Dark Mode Compatible) ---
 st.markdown("""
     <style>
-     /* Main page background - soft mint gradient */
+    /* Light and Dark Mode Variables */
+    :root {
+        --primary-color: #2A5C9E;
+        --primary-light: #E8F1F5;
+        --primary-dark: #0B2545;
+        --text-dark: #0B2545;
+        --text-light: #FFFFFF;
+        --bg-secondary: #e9ecef;
+        --bg-tertiary: #dee2e6;
+        --border-color: #2A5C9E;
+    }
+    
+    /* Dark theme adjustments */
+    [data-theme="dark"] {
+        --primary-color: #64B5F6;
+        --primary-light: #1e3a5f;
+        --primary-dark: #f0f0f0;
+        --text-dark: #e0e0e0;
+        --text-light: #0B2545;
+        --bg-secondary: #1a1a1a;
+        --bg-tertiary: #252525;
+        --border-color: #64B5F6;
+    }
+    
+    /* Main page background */
     [data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg,  #f8f9fa 0%, #e9ecef 100%);
-    background-attachment: fixed;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        background-attachment: fixed;
     }
-
-    /* Sidebar background - matching gradient */
+    
+    [data-theme="dark"] [data-testid="stAppViewContainer"] {
+        background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+        background-attachment: fixed;
+    }
+    
+    /* Sidebar background */
     [data-testid="stSidebar"] {
-    background: linear-gradient(180deg,  #e9ecef 0%, #dee2e6 100%);
+        background: linear-gradient(180deg, #e9ecef 0%, #dee2e6 100%);
     }
-
+    
+    [data-theme="dark"] [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #1a1f2e 0%, #252d3d 100%);
+    }
+    
     body {
-        background-color: #0B2545;
-        color: #FFFFFF;
+        color: var(--text-dark);
     }
+    
+    [data-theme="dark"] body {
+        color: var(--text-dark);
+    }
+    
     .card {
-        background-color: #E8F1F5;
-        color: #0B2545;
+        background-color: var(--primary-light);
+        color: var(--text-light);
         padding: 20px;
         border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         margin-bottom: 20px;
     }
-    .stButton>button {
-        background-color: #E8F1F5;
-        color: #0B2545;
+    
+    [data-theme="dark"] .card {
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+        box-shadow: 0 4px 15px rgba(100, 181, 246, 0.2);
+    }
+    
+    .stButton > button {
+        background-color: var(--primary-light);
+        color: var(--text-light);
         border-radius: 8px;
         padding: 0.5em 1em;
         margin-top: 5px;
         font-weight: 500;
-        border: 1px solid #2A5C9E;
+        border: 1px solid var(--border-color);
     }
-    .stButton>button:hover {
+    
+    [data-theme="dark"] .stButton > button {
+        background-color: var(--primary-light);
+        color: var(--text-light);
+        border: 1px solid var(--border-color);
+    }
+    
+    .stButton > button:hover {
         background-color: #D4E9F7;
-        color: #0B2545;
+        color: var(--text-light);
     }
+    
+    [data-theme="dark"] .stButton > button:hover {
+        background-color: #2a7dd9;
+        color: white;
+    }
+    
     .stRadio > div {
         flex-direction: column;
     }
+    
     details {
-        background-color: #E8F1F5;
-        color: #0B2545;
+        background-color: var(--primary-light);
+        color: var(--text-light);
         padding: 10px;
         border-radius: 8px;
         margin-bottom: 10px;
     }
+    
+    [data-theme="dark"] details {
+        background-color: var(--primary-light);
+        color: var(--text-light);
+    }
+    
     summary {
         font-weight: bold;
         cursor: pointer;
-        color: #0B2545;
+        color: var(--text-light);
     }
+    
+    [data-theme="dark"] summary {
+        color: var(--text-light);
+    }
+    
     img {
         max-width: 100%;
         border-radius: 8px;
         margin-top: 10px;
         margin-bottom: 10px;
     }
+    
     .result-box {
         background-color: #D4E9F7;
         padding: 15px;
         border-radius: 8px;
         margin: 10px 0;
-        color: #0B2545;
-        border-left: 4px solid #2A5C9E;
+        color: var(--text-light);
+        border-left: 4px solid var(--border-color);
     }
+    
+    [data-theme="dark"] .result-box {
+        background-color: #1e3a5f;
+        color: #e0e0e0;
+        border-left: 4px solid #64B5F6;
+    }
+    
     .result-box.critical {
         background-color: #FFE5E5;
         border-left: 4px solid #D32F2F;
+        color: #333;
     }
+    
+    [data-theme="dark"] .result-box.critical {
+        background-color: #4a2020;
+        color: #ff9999;
+        border-left: 4px solid #ff6b6b;
+    }
+    
     .result-box.high {
         background-color: #FFF3E0;
         border-left: 4px solid #F57C00;
+        color: #333;
     }
+    
+    [data-theme="dark"] .result-box.high {
+        background-color: #4a3820;
+        color: #ffb74d;
+        border-left: 4px solid #ffb74d;
+    }
+    
     .result-box.medium {
         background-color: #FFF9C4;
         border-left: 4px solid #FBC02D;
+        color: #333;
     }
+    
+    [data-theme="dark"] .result-box.medium {
+        background-color: #4a4620;
+        color: #ffd54f;
+        border-left: 4px solid #ffd54f;
+    }
+    
     .result-box.low {
         background-color: #E8F5E9;
         border-left: 4px solid #388E3C;
+        color: #333;
     }
-    .stTextInput>div>div>input {
+    
+    [data-theme="dark"] .result-box.low {
+        background-color: #1b3a1b;
+        color: #81c784;
+        border-left: 4px solid #81c784;
+    }
+    
+    .stTextInput > div > div > input {
         background-color: white;
         color: #0B2545;
     }
-    .stSelectbox>div>div>select {
+    
+    [data-theme="dark"] .stTextInput > div > div > input {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        border-color: #64B5F6;
+    }
+    
+    .stSelectbox > div > div > select {
         background-color: white;
         color: #0B2545;
     }
+    
+    [data-theme="dark"] .stSelectbox > div > div > select {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        border-color: #64B5F6;
+    }
+    
     .streamlit-expanderHeader {
-        background-color: #E8F1F5 !important;
-        color: #0B2545 !important;
+        background-color: var(--primary-light) !important;
+        color: var(--text-light) !important;
     }
+    
+    [data-theme="dark"] .streamlit-expanderHeader {
+        background-color: #1e3a5f !important;
+        color: #e0e0e0 !important;
+    }
+    
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
     }
+    
     .stTabs [data-baseweb="tab"] {
-        background-color: #E8F1F5;
-        color: #0B2545;
+        background-color: var(--primary-light);
+        color: var(--text-light);
         border-radius: 8px 8px 0 0;
         padding: 10px 20px;
     }
+    
+    [data-theme="dark"] .stTabs [data-baseweb="tab"] {
+        background-color: #1e3a5f;
+        color: #e0e0e0;
+    }
+    
     .stTabs [aria-selected="true"] {
-        background-color: #2A5C9E;
+        background-color: var(--border-color);
         color: white;
     }
+    
+    [data-theme="dark"] .stTabs [aria-selected="true"] {
+        background-color: #64B5F6;
+        color: #0B2545;
+    }
+    
+    /* Header styling */
+    h1, h2, h3 {
+        color: var(--text-light);
+    }
+    
+    [data-theme="dark"] h1, 
+    [data-theme="dark"] h2, 
+    [data-theme="dark"] h3 {
+        color: #64B5F6;
+    }
+    
+    /* Paragraph text */
+    p {
+        color: var(--text-light);
+    }
+    
+    [data-theme="dark"] p {
+        color: #e0e0e0;
+    }
+    
+    /* Info boxes */
+    [data-testid="stInfo"], 
+    [data-testid="stWarning"], 
+    [data-testid="stError"], 
+    [data-testid="stSuccess"] {
+        border-radius: 8px;
+    }
+    
     </style>
 """, unsafe_allow_html=True)
-
 # Initialize session state
 if "uploaded_image" not in st.session_state:
     st.session_state.uploaded_image = None
@@ -167,7 +336,7 @@ tab = st.sidebar.radio("Navigation", tabs)
 # -------------------- AI Diagnosis Tab --------------------
 if tab == "AI Diagnosis":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header("🤖 AI-Powered Diabetic Retinopathy Diagnosis")
+    st.header(" AI-Powered Diabetic Retinopathy Diagnosis")
     
     # Check if model is loaded
     if st.session_state.model is None:
@@ -175,14 +344,14 @@ if tab == "AI Diagnosis":
             st.session_state.model = get_model()
         
         if st.session_state.model is None:
-            st.error("❌ Failed to load the AI model. Please ensure 'dr_model.h5' is in the app directory.")
+            st.error(" Failed to load the AI model. Please ensure 'dr_model.h5' is in the app directory.")
             st.stop()
         else:
-            st.success("✅ AI model loaded successfully!")
+            st.success(" AI model loaded successfully!")
     
     # Image Upload Section
-    st.subheader("📤 Upload Retinal Image")
-    st.info("💡 Upload a fundus photograph (retinal image) for AI analysis. Supported formats: JPG, JPEG, PNG")
+    st.subheader(" Upload Retinal Image")
+    st.info(" Upload a fundus photograph (retinal image) for AI analysis. Supported formats: JPG, JPEG, PNG")
     
     uploaded_file = st.file_uploader("Choose a retinal image...", type=["jpg", "jpeg", "png"])
     
@@ -203,15 +372,15 @@ if tab == "AI Diagnosis":
         # Display uploaded image
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.image(image, caption="📷 Uploaded Retinal Image", use_container_width=200)
+            st.image(image, caption=" Uploaded Retinal Image", use_container_width=200)
         
         st.markdown("---")
         
         # Analyze Button
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            if st.button("🔬 Analyze Image", type="primary", use_container_width=200):
-                with st.spinner("🔄 Processing image and running AI analysis..."):
+            if st.button(" Analyze Image", type="primary", use_container_width=200):
+                with st.spinner(" Processing image and running AI analysis..."):
                     try:
                         # Preprocess image
                         processed_img = preprocess_image(image_np, target_size=(320, 320))
@@ -250,20 +419,20 @@ if tab == "AI Diagnosis":
                             "severity": stage_info["severity"]
                         }
                         
-                        st.success("✅ Analysis Complete!")
+                        st.success(" Analysis Complete!")
                         st.balloons()
                         
                     except Exception as e:
-                        st.error(f"❌ Error during analysis: {str(e)}")
+                        st.error(f" Error during analysis: {str(e)}")
                         st.info("Please try uploading a different image or check if the model file is correct.")
         
         # Show results if available
         if st.session_state.diagnosis_result:
             st.markdown("---")
-            st.subheader("📊 Analysis Results")
+            st.subheader(" Analysis Results")
             
             # Create tabs for results
-            tab1, tab2 = st.tabs(["🔬 Diagnosis Results", "🖼️ Processed Images"])
+            tab1, tab2 = st.tabs([" Diagnosis Results", " Processed Images"])
             
             with tab1:
                 result = st.session_state.diagnosis_result
@@ -272,34 +441,34 @@ if tab == "AI Diagnosis":
                 # Main diagnosis box
                 st.markdown(f"""
                 <div class="result-box {severity_class}">
-                    <h2 style="margin-top: 0;">🎯 Detected Stage: {result['stage']}</h2>
+                    <h2 style="margin-top: 0;"> Detected Stage: {result['stage']}</h2>
                     <p style="font-size: 18px;"><strong>Confidence Level:</strong> {result['confidence']*100:.1f}%</p>
                     <p style="font-size: 16px;"><strong>Raw Prediction Value:</strong> {result['raw_prediction']:.3f} (Scale: 0-4)</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
                 # Clinical Findings
-                st.markdown("### 🔍 Clinical Findings")
+                st.markdown("###  Clinical Findings")
                 st.info(result['findings'])
                 
                 # Recommendations
-                st.markdown("### 💊 Recommended Actions")
+                st.markdown("###  Recommended Actions")
                 
                 if severity_class in ["critical", "high"]:
-                    st.error("⚠️ **URGENT ACTION REQUIRED**")
+                    st.error(" **URGENT ACTION REQUIRED**")
                 elif severity_class == "medium":
-                    st.warning("⚠️ **Medical Attention Recommended**")
+                    st.warning(" **Medical Attention Recommended**")
                 else:
-                    st.success("✅ **Continue Regular Monitoring**")
+                    st.success(" **Continue Regular Monitoring**")
                 
                 for i, rec in enumerate(result['recommendations'], 1):
-                    if rec.startswith("🚨") or rec.startswith("⚠️"):
+                    if rec.startswith("") or rec.startswith(""):
                         st.error(f"{i}. {rec}")
                     else:
                         st.write(f"{i}. {rec}")
                 
                 # Additional Information
-                with st.expander("ℹ️ Understanding Your Results"):
+                with st.expander(" Understanding Your Results"):
                     st.write("""
                     **About the AI Analysis:**
                     - Our AI model uses deep learning to analyze retinal images
@@ -315,7 +484,7 @@ if tab == "AI Diagnosis":
                     """)
             
             with tab2:
-                st.markdown("### 🖼️ Image Analysis Visualization")
+                st.markdown("###  Image Analysis Visualization")
                 
                 # Show three images side by side
                 col1, col2, col3 = st.columns(3)
@@ -323,7 +492,7 @@ if tab == "AI Diagnosis":
                 with col1:
                     st.markdown("**Original Image**")
                     st.image(st.session_state.original_image, use_container_width=True)
-                    st.caption("📷 As uploaded")
+                    st.caption(" As uploaded")
                 
                 with col2:
                     st.markdown("**Preprocessed Image**")
@@ -333,11 +502,11 @@ if tab == "AI Diagnosis":
                 with col3:
                     st.markdown("**GradCAM Heatmap**")
                     st.image(st.session_state.gradcam_image, use_container_width=True)
-                    st.caption("🔥 AI attention areas")
+                    st.caption(" AI attention areas")
                 
                 st.markdown("---")
                 
-                with st.expander("ℹ️ Understanding GradCAM Visualization"):
+                with st.expander(" Understanding GradCAM Visualization"):
                     st.write("""
                     **What is GradCAM?**
                     
@@ -345,8 +514,8 @@ if tab == "AI Diagnosis":
                     which regions of the retinal image were most important for the AI's decision.
                     
                     **How to interpret the heatmap:**
-                    - 🔴 **Red/Yellow areas**: Regions that strongly influenced the AI's diagnosis
-                    - 🔵 **Blue/Purple areas**: Regions with less influence on the prediction
+                    -  **Red/Yellow areas**: Regions that strongly influenced the AI's diagnosis
+                    -  **Blue/Purple areas**: Regions with less influence on the prediction
                     - These highlighted areas often correspond to lesions, hemorrhages, or other pathological features
                     
                     **Preprocessing steps applied:**
@@ -359,7 +528,7 @@ if tab == "AI Diagnosis":
     else:
         # Show instructions when no image is uploaded
         st.info("""
-        👆 **Please upload a retinal fundus image to begin analysis**
+         **Please upload a retinal fundus image to begin analysis**
         
         **Tips for best results:**
         - Use clear, well-lit fundus photographs
@@ -373,7 +542,7 @@ if tab == "AI Diagnosis":
 # -------------------- About DR Tab --------------------
 elif tab == "About DR":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header("ℹ️ About Diabetic Retinopathy")
+    st.header(" About Diabetic Retinopathy")
     
     st.write("""
     Diabetic Retinopathy (DR) is a diabetes complication that affects the eyes. 
@@ -400,7 +569,7 @@ elif tab == "About DR":
 # -------------------- Symptoms Guide Tab --------------------
 elif tab == "Symptoms Guide":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header("👁️ Symptoms Guide")
+    st.header(" Symptoms Guide")
     st.write("Learn about diabetic retinopathy symptoms and tips for prevention:")
 
     symptoms = [
@@ -417,7 +586,7 @@ elif tab == "Symptoms Guide":
         st.markdown(f"<details><summary>{symptom}</summary><p>{explanation}</p></details>", unsafe_allow_html=True)
     
     st.markdown("---")
-    st.subheader("🛡️ Prevention Tips")
+    st.subheader(" Prevention Tips")
     st.write("""
     1. **Control Blood Sugar**: Keep HbA1c below 7%
     2. **Monitor Blood Pressure**: Target <140/90 mmHg
@@ -433,7 +602,7 @@ elif tab == "Symptoms Guide":
 # -------------------- Quiz Tab --------------------
 elif tab == "Quiz":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header("❓ Diabetic Retinopathy Quiz")
+    st.header(" Diabetic Retinopathy Quiz")
     st.write("Test your knowledge about diabetic retinopathy!")
 
     questions = [
@@ -457,11 +626,11 @@ elif tab == "Quiz":
                 st.warning("You already answered this question!")
             else:
                 if q["opts"].index(choice) == q["ans"]:
-                    st.success("✅ Correct!")
+                    st.success(" Correct!")
                     st.info(q["exp"])
                     st.session_state.quiz_score += 1
                 else:
-                    st.error(f"❌ Incorrect. Correct: **{q['opts'][q['ans']]}**")
+                    st.error(f" Incorrect. Correct: **{q['opts'][q['ans']]}**")
                     st.info(q["exp"])
                 st.session_state[f"answered_{i}"] = True
 
@@ -470,13 +639,13 @@ elif tab == "Quiz":
     st.write(f"**Your total score: {st.session_state.quiz_score} / {len(questions)} ({score_percentage:.0f}%)**")
     
     if score_percentage >= 80:
-        st.success("🎉 Excellent! You have great knowledge about DR!")
+        st.success(" Excellent! You have great knowledge about DR!")
     elif score_percentage >= 60:
-        st.info("👍 Good job! Keep learning more about DR.")
+        st.info(" Good job! Keep learning more about DR.")
     else:
-        st.warning("📚 Consider reviewing the About DR and Symptoms sections.")
+        st.warning(" Consider reviewing the About DR and Symptoms sections.")
     
-    if st.button("🔄 Reset Quiz"):
+    if st.button(" Reset Quiz"):
         st.session_state.quiz_score = 0
         for i in range(len(questions)):
             if f"answered_{i}" in st.session_state:
@@ -488,10 +657,10 @@ elif tab == "Quiz":
 # -------------------- Generate Report Tab --------------------
 elif tab == "Generate Report":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header("📄 Generate Medical Report")
+    st.header(" Generate Medical Report")
     
     # Patient Information Form
-    st.subheader("👤 Patient Information")
+    st.subheader(" Patient Information")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -512,11 +681,11 @@ elif tab == "Generate Report":
     st.markdown("---")
     
     # Generate Report Button
-    if st.button("📄 Generate & Download Report", type="primary", use_container_width=300):
+    if st.button(" Generate & Download Report", type="primary", use_container_width=300):
         if not patient_name or not patient_age or patient_gender == "Select":
-            st.error("⚠️ Please fill in all patient information fields.")
+            st.error(" Please fill in all patient information fields.")
         elif not st.session_state.diagnosis_result:
-            st.error("⚠️ Please complete an AI diagnosis first before generating a report.")
+            st.error(" Please complete an AI diagnosis first before generating a report.")
         else:
             # Generate HTML report
             result = st.session_state.diagnosis_result
@@ -682,13 +851,13 @@ elif tab == "Generate Report":
             </head>
             <body>
                 <div class="header">
-                    <h1>🏥 DIABETIC RETINOPATHY DIAGNOSIS REPORT</h1>
+                    <h1> DIABETIC RETINOPATHY DIAGNOSIS REPORT</h1>
                     <p style="font-size: 18px;">AI-Powered Retinal Analysis System</p>
                     <p>Report Generated: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}</p>
                 </div>
                 
                 <div class="section">
-                    <h2>👤 Patient Information</h2>
+                    <h2> Patient Information</h2>
                     <div class="info-row"><span class="label">Full Name:</span> {patient_name}</div>
                     <div class="info-row"><span class="label">Age:</span> {patient_age} years</div>
                     <div class="info-row"><span class="label">Gender:</span> {patient_gender}</div>
@@ -697,7 +866,7 @@ elif tab == "Generate Report":
                 </div>
                 
                 <div class="section">
-                    <h2>🔬 AI Diagnosis Results</h2>
+                    <h2> AI Diagnosis Results</h2>
                     <div class="diagnosis-box">
                         <h3>Detected Stage: {result['stage']}</h3>
                         <span class="severity-badge">Severity: {result.get('severity', 'N/A').upper()}</span>
@@ -713,7 +882,7 @@ elif tab == "Generate Report":
                 </div>
                 
                 <div class="section">
-                    <h2>💊 Recommended Treatment & Management</h2>
+                    <h2> Recommended Treatment & Management</h2>
                     <div class="recommendations">
                         <ul>
                             {''.join([f'<li>{rec}</li>' for rec in result['recommendations']])}
@@ -722,7 +891,7 @@ elif tab == "Generate Report":
                 </div>
                 
                 <div class="section">
-                    <h2>📊 Patient Knowledge Assessment</h2>
+                    <h2> Patient Knowledge Assessment</h2>
                     <div class="info-row"><span class="label">Quiz Score:</span> {st.session_state.quiz_score} / 10</div>
                     <div class="info-row"><span class="label">Percentage:</span> {(st.session_state.quiz_score/10)*100:.0f}%</div>
                     <div class="info-row"><span class="label">Assessment:</span> 
@@ -732,7 +901,7 @@ elif tab == "Generate Report":
                     </div>
                 </div>
                 
-                {"<div class='section'><h2>🖼️ Retinal Image Analysis</h2>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
+                {"<div class='section'><h2> Retinal Image Analysis</h2>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
                 {"<div class='image-row'>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
                     {"<div class='image-item'><img src='data:image/png;base64," + img_base64 + "' alt='Original Image'/><p class='image-caption'>Original Retinal Image</p></div>" if img_base64 else ""}
                     {"<div class='image-item'><img src='data:image/png;base64," + processed_img_base64 + "' alt='Processed Image'/><p class='image-caption'>Preprocessed Image</p></div>" if processed_img_base64 else ""}
@@ -740,7 +909,7 @@ elif tab == "Generate Report":
                 {"</div></div>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
                 
                 <div class="disclaimer">
-                    <h3 style="margin-top: 0; color: #F57C00;">⚠️ Important Disclaimer</h3>
+                    <h3 style="margin-top: 0; color: #F57C00;"> Important Disclaimer</h3>
                     <p><strong>This report is generated by an AI system and should NOT replace professional medical advice.</strong></p>
                     <p>The AI model is designed as a screening tool to assist healthcare professionals. All diagnoses should be confirmed by a qualified ophthalmologist through comprehensive clinical examination.</p>
                     <p><strong>Next Steps:</strong></p>
@@ -763,19 +932,19 @@ elif tab == "Generate Report":
             """
             
             # Create download button
-            st.success("✅ Report generated successfully!")
+            st.success(" Report generated successfully!")
             st.download_button(
-                label="⬇️ Download Report (HTML)",
+                label=" Download Report (HTML)",
                 data=html_content,
                 file_name=f"DR_Report_{patient_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                 mime="text/html",
                 use_container_width=True
             )
             
-            st.info("💡 **Tip:** Open the downloaded HTML file in any web browser to view your complete report. You can print or save it as PDF from your browser.")
+            st.info(" **Tip:** Open the downloaded HTML file in any web browser to view your complete report. You can print or save it as PDF from your browser.")
             
             # Show preview
-            with st.expander("👁️ Preview Report"):
+            with st.expander(" Preview Report"):
                 st.markdown("**Report Summary:**")
                 st.write(f"- **Patient:** {patient_name}, {patient_age} years old, {patient_gender}")
                 st.write(f"- **Diagnosis:** {result['stage']}")
