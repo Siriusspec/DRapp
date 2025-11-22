@@ -5,7 +5,7 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import cv2
-
+import gc
 # Import model utilities
 from model_utils import (
     load_model, preprocess_image, make_gradcam_heatmap, 
@@ -379,6 +379,26 @@ st.markdown("""
     </script>
 """, unsafe_allow_html=True)
 
+import gc
+import tensorflow as tf
+
+# Helper function to clear session
+def clear_session_data(keep_patient_info=False):
+    """Clear all session data to free memory"""
+    st.session_state.uploaded_image = None
+    st.session_state.original_image = None
+    st.session_state.processed_image = None
+    st.session_state.gradcam_image = None
+    st.session_state.diagnosis_result = None
+    
+    if not keep_patient_info:
+        st.session_state.patient_name = ""
+        st.session_state.patient_age = ""
+        st.session_state.patient_gender = ""
+    
+    gc.collect()
+    tf.keras.backend.clear_session()
+
 # Initialize session state
 if "uploaded_image" not in st.session_state:
     st.session_state.uploaded_image = None
@@ -602,6 +622,23 @@ if tab == "AI Diagnosis":
                     3. Ben Graham's preprocessing for contrast enhancement
                     4. Normalization for neural network input
                     """)
+                    
+            st.markdown("---")
+            st.subheader(" Clear Session")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("Clear Analysis (Keep Patient Info)", key="clear_analysis_btn"):
+                    clear_session_data(keep_patient_info=True)
+                    st.success("Session cleared! Upload another image.")
+                    st.rerun()
+            
+            with col2:
+                if st.button("New Patient (Clear All)", key="clear_all_btn"):
+                    clear_session_data(keep_patient_info=False)
+                    st.success("Ready for new patient!")
+                    st.rerun()   
     
     else:
         # Show instructions when no image is uploaded
@@ -1029,5 +1066,22 @@ elif tab == "Generate Report":
                 st.write(f"- **Confidence:** {result['confidence']*100:.1f}%")
                 st.write(f"- **Quiz Score:** {st.session_state.quiz_score}/10")
                 st.write(f"- **Images Included:** {'Yes' if img_base64 else 'No'}")
+               st.markdown("---")
+            
+            st.subheader(" Clear Session")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                if st.button("Clear Analysis (Keep Patient Info)", key="clear_report_analysis"):
+                    clear_session_data(keep_patient_info=True)
+                    st.success("Analysis cleared! Upload another image.")
+                    st.rerun()
+            
+            with col2:
+                if st.button("New Patient (Clear All)", key="clear_report_all"):
+                    clear_session_data(keep_patient_info=False)
+                    st.success("Ready for new patient!")
+                    st.rerun()
     
     st.markdown('</div>', unsafe_allow_html=True)
