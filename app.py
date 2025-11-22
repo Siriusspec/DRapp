@@ -5,6 +5,8 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import cv2
+import gdown
+import os
 
 # Import model utilities
 from model_utils import (
@@ -401,11 +403,28 @@ if "patient_gender" not in st.session_state:
 if "model" not in st.session_state:
     st.session_state.model = None
 
+
+def download_and_load_model():
+    """Download model from Google Drive if not present"""
+    model_path = "dr_model.h5"
+    
+    if not os.path.exists(model_path):
+        file_id = "1uZwpcg0-kWndIgb7x8Jt2jl7kNx3B1Qp"
+        url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t"        
+        st.info("Downloading AI model (393 MB)...")
+        try:
+            gdown.download(url, model_path, quiet=False)
+            st.success("Model ready!")
+        except Exception as e:
+            st.error(f"Download failed: {e}")
+            return None   
+    return load_model(model_path)
+
 # Load model once
 @st.cache_resource
 def get_model():
-    """Load model with caching"""
-    return load_model('dr_model.h5')
+    return download_and_load_model()
+
 
 # --- Tabs ---
 tabs = ["AI Diagnosis", "About DR", "Symptoms Guide", "Quiz", "Generate Report"]
