@@ -1066,7 +1066,7 @@ elif tab == "Generate Report":
                 st.write(f"- **Confidence:** {result['confidence']*100:.1f}%")
                 st.write(f"- **Quiz Score:** {st.session_state.quiz_score}/10")
                 st.write(f"- **Images Included:** {'Yes' if img_base64 else 'No'}")
-               st.markdown("---")
+                st.markdown("---")
             
             st.subheader(" Clear Session")
             
