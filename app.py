@@ -6,6 +6,7 @@ from PIL import Image
 import numpy as np
 import cv2
 import gc
+import tensorflow as tf
 # Import model utilities
 from model_utils import (
     load_model, preprocess_image, make_gradcam_heatmap, 
@@ -379,8 +380,6 @@ st.markdown("""
     </script>
 """, unsafe_allow_html=True)
 
-import gc
-import tensorflow as tf
 
 # Helper function to clear session
 def clear_session_data(keep_patient_info=False):
