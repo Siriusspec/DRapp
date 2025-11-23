@@ -332,7 +332,6 @@ st.markdown("""
 
     <script>
     function detectStreamlitTheme() {
-        // Wait for Streamlit to load
         if (window.streamlit === undefined) {
             setTimeout(detectStreamlitTheme, 100);
             return;
@@ -341,16 +340,11 @@ st.markdown("""
         function applyTheme() {
             const htmlElement = document.documentElement;
             const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            
-            // Also check Streamlit's internal theme state
             const streamlitConfig = window.streamlit?.config?.theme?.base;
-            
-            console.log("Theme detected - isDarkMode:", isDarkMode, "streamlitConfig:", streamlitConfig);
             
             if (isDarkMode || streamlitConfig === 'dark') {
                 htmlElement.classList.add('dark-mode');
                 htmlElement.classList.remove('light-mode');
-                // Force dark background on body
                 document.body.style.backgroundColor = '#0a0e27';
             } else {
                 htmlElement.classList.remove('dark-mode');
@@ -359,23 +353,18 @@ st.markdown("""
             }
         }
 
-        // Apply theme on load
         applyTheme();
 
-        // Watch for theme changes
         if (window.matchMedia) {
             const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
             darkModeQuery.addListener((e) => {
-                console.log("Theme changed");
                 applyTheme();
             });
         }
 
-        // Check periodically
         setInterval(applyTheme, 500);
     }
 
-    // Start detection immediately and on document ready
     detectStreamlitTheme();
     document.addEventListener('DOMContentLoaded', detectStreamlitTheme);
     </script>
@@ -426,6 +415,27 @@ def get_model():
     return download_and_load_model()
 
 
+# --- Sidebar with Cache Clear Options ---
+st.sidebar.markdown("---")
+st.sidebar.subheader("Memory Management")
+col1, col2 = st.sidebar.columns(2)
+with col1:
+    if st.button("Clear Cache", use_container_width=True):
+        st.cache_resource.clear()
+        st.session_state.model = None
+        st.success("Cache cleared!")
+        st.rerun()
+
+with col2:
+    if st.button("Clear Results", use_container_width=True):
+        st.session_state.uploaded_image = None
+        st.session_state.diagnosis_result = None
+        st.session_state.processed_image = None
+        st.session_state.gradcam_image = None
+        st.session_state.original_image = None
+        st.success("Results cleared!")
+        st.rerun()
+
 # --- Tabs ---
 tabs = ["AI Diagnosis", "About DR", "Symptoms Guide", "Quiz", "Generate Report"]
 tab = st.sidebar.radio("Navigation", tabs)
@@ -433,7 +443,7 @@ tab = st.sidebar.radio("Navigation", tabs)
 # -------------------- AI Diagnosis Tab --------------------
 if tab == "AI Diagnosis":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header(" AI-Powered Diabetic Retinopathy Diagnosis")
+    st.header("AI-Powered Diabetic Retinopathy Diagnosis")
     
     # Check if model is loaded
     if st.session_state.model is None:
@@ -441,14 +451,14 @@ if tab == "AI Diagnosis":
             st.session_state.model = get_model()
         
         if st.session_state.model is None:
-            st.error(" Failed to load the AI model. Please ensure 'dr_model.h5' is in the app directory.")
+            st.error("Failed to load the AI model. Please ensure 'dr_model.h5' is in the app directory.")
             st.stop()
         else:
-            st.success(" AI model loaded successfully!")
+            st.success("AI model loaded successfully!")
     
     # Image Upload Section
-    st.subheader(" Upload Retinal Image")
-    st.info(" Upload a fundus photograph (retinal image) for AI analysis. Supported formats: JPG, JPEG, PNG")
+    st.subheader("Upload Retinal Image")
+    st.info("Upload a fundus photograph (retinal image) for AI analysis. Supported formats: JPG, JPEG, PNG")
     
     uploaded_file = st.file_uploader("Choose a retinal image...", type=["jpg", "jpeg", "png"])
     
@@ -469,15 +479,15 @@ if tab == "AI Diagnosis":
         # Display uploaded image
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.image(image, caption=" Uploaded Retinal Image", use_container_width=200)
+            st.image(image, caption="Uploaded Retinal Image", use_container_width=200)
         
         st.markdown("---")
         
         # Analyze Button
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
-            if st.button(" Analyze Image", type="primary", use_container_width=200):
-                with st.spinner(" Processing image and running AI analysis..."):
+            if st.button("Analyze Image", type="primary", use_container_width=200):
+                with st.spinner("Processing image and running AI analysis..."):
                     try:
                         # Preprocess image
                         processed_img = preprocess_image(image_np, target_size=(320, 320))
@@ -516,20 +526,20 @@ if tab == "AI Diagnosis":
                             "severity": stage_info["severity"]
                         }
                         
-                        st.success(" Analysis Complete!")
+                        st.success("Analysis Complete!")
                         st.balloons()
                         
                     except Exception as e:
-                        st.error(f" Error during analysis: {str(e)}")
+                        st.error(f"Error during analysis: {str(e)}")
                         st.info("Please try uploading a different image or check if the model file is correct.")
         
         # Show results if available
         if st.session_state.diagnosis_result:
             st.markdown("---")
-            st.subheader(" Analysis Results")
+            st.subheader("Analysis Results")
             
             # Create tabs for results
-            tab1, tab2 = st.tabs([" Diagnosis Results", " Processed Images"])
+            tab1, tab2 = st.tabs(["Diagnosis Results", "Processed Images"])
             
             with tab1:
                 result = st.session_state.diagnosis_result
@@ -538,34 +548,31 @@ if tab == "AI Diagnosis":
                 # Main diagnosis box
                 st.markdown(f"""
                 <div class="result-box {severity_class}">
-                    <h2 style="margin-top: 0;"> Detected Stage: {result['stage']}</h2>
+                    <h2 style="margin-top: 0;">Detected Stage: {result['stage']}</h2>
                     <p style="font-size: 18px;"><strong>Confidence Level:</strong> {result['confidence']*100:.1f}%</p>
                     <p style="font-size: 16px;"><strong>Raw Prediction Value:</strong> {result['raw_prediction']:.3f} (Scale: 0-4)</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
                 # Clinical Findings
-                st.markdown("###  Clinical Findings")
+                st.markdown("### Clinical Findings")
                 st.info(result['findings'])
                 
                 # Recommendations
-                st.markdown("###  Recommended Actions")
+                st.markdown("### Recommended Actions")
                 
                 if severity_class in ["critical", "high"]:
-                    st.error(" **URGENT ACTION REQUIRED**")
+                    st.error("URGENT ACTION REQUIRED")
                 elif severity_class == "medium":
-                    st.warning(" **Medical Attention Recommended**")
+                    st.warning("Medical Attention Recommended")
                 else:
-                    st.success(" **Continue Regular Monitoring**")
+                    st.success("Continue Regular Monitoring")
                 
                 for i, rec in enumerate(result['recommendations'], 1):
-                    if rec.startswith("") or rec.startswith(""):
-                        st.error(f"{i}. {rec}")
-                    else:
-                        st.write(f"{i}. {rec}")
+                    st.write(f"{i}. {rec}")
                 
                 # Additional Information
-                with st.expander(" Understanding Your Results"):
+                with st.expander("Understanding Your Results"):
                     st.write("""
                     **About the AI Analysis:**
                     - Our AI model uses deep learning to analyze retinal images
@@ -581,7 +588,7 @@ if tab == "AI Diagnosis":
                     """)
             
             with tab2:
-                st.markdown("###  Image Analysis Visualization")
+                st.markdown("### Image Analysis Visualization")
                 
                 # Show three images side by side
                 col1, col2, col3 = st.columns(3)
@@ -589,21 +596,21 @@ if tab == "AI Diagnosis":
                 with col1:
                     st.markdown("**Original Image**")
                     st.image(st.session_state.original_image, use_container_width=True)
-                    st.caption(" As uploaded")
+                    st.caption("As uploaded")
                 
                 with col2:
                     st.markdown("**Preprocessed Image**")
                     st.image(st.session_state.processed_image, use_container_width=True)
-                    st.caption("🔧 After circle crop & enhancement")
+                    st.caption("After circle crop & enhancement")
                 
                 with col3:
                     st.markdown("**GradCAM Heatmap**")
                     st.image(st.session_state.gradcam_image, use_container_width=True)
-                    st.caption(" AI attention areas")
+                    st.caption("AI attention areas")
                 
                 st.markdown("---")
                 
-                with st.expander(" Understanding GradCAM Visualization"):
+                with st.expander("Understanding GradCAM Visualization"):
                     st.write("""
                     **What is GradCAM?**
                     
@@ -611,8 +618,8 @@ if tab == "AI Diagnosis":
                     which regions of the retinal image were most important for the AI's decision.
                     
                     **How to interpret the heatmap:**
-                    -  **Red/Yellow areas**: Regions that strongly influenced the AI's diagnosis
-                    -  **Blue/Purple areas**: Regions with less influence on the prediction
+                    - Red/Yellow areas: Regions that strongly influenced the AI's diagnosis
+                    - Blue/Purple areas: Regions with less influence on the prediction
                     - These highlighted areas often correspond to lesions, hemorrhages, or other pathological features
                     
                     **Preprocessing steps applied:**
@@ -625,7 +632,7 @@ if tab == "AI Diagnosis":
     else:
         # Show instructions when no image is uploaded
         st.info("""
-         **Please upload a retinal fundus image to begin analysis**
+        Please upload a retinal fundus image to begin analysis
         
         **Tips for best results:**
         - Use clear, well-lit fundus photographs
@@ -639,7 +646,7 @@ if tab == "AI Diagnosis":
 # -------------------- About DR Tab --------------------
 elif tab == "About DR":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header(" About Diabetic Retinopathy")
+    st.header("About Diabetic Retinopathy")
     
     st.write("""
     Diabetic Retinopathy (DR) is a diabetes complication that affects the eyes. 
@@ -654,7 +661,7 @@ elif tab == "About DR":
     ]
 
     for stage, desc, img_path in stages:
-        with st.expander(f" {stage}"):
+        with st.expander(f"{stage}"):
             st.write(desc)
             try:
                 st.image(img_path, use_container_width=300)
@@ -666,7 +673,7 @@ elif tab == "About DR":
 # -------------------- Symptoms Guide Tab --------------------
 elif tab == "Symptoms Guide":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header(" Symptoms Guide")
+    st.header("Symptoms Guide")
     st.write("Learn about diabetic retinopathy symptoms and tips for prevention:")
 
     symptoms = [
@@ -683,7 +690,7 @@ elif tab == "Symptoms Guide":
         st.markdown(f"<details><summary>{symptom}</summary><p>{explanation}</p></details>", unsafe_allow_html=True)
     
     st.markdown("---")
-    st.subheader(" Prevention Tips")
+    st.subheader("Prevention Tips")
     st.write("""
     1. **Control Blood Sugar**: Keep HbA1c below 7%
     2. **Monitor Blood Pressure**: Target <140/90 mmHg
@@ -699,7 +706,7 @@ elif tab == "Symptoms Guide":
 # -------------------- Quiz Tab --------------------
 elif tab == "Quiz":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header(" Diabetic Retinopathy Quiz")
+    st.header("Diabetic Retinopathy Quiz")
     st.write("Test your knowledge about diabetic retinopathy!")
 
     questions = [
@@ -723,11 +730,11 @@ elif tab == "Quiz":
                 st.warning("You already answered this question!")
             else:
                 if q["opts"].index(choice) == q["ans"]:
-                    st.success(" Correct!")
+                    st.success("Correct!")
                     st.info(q["exp"])
                     st.session_state.quiz_score += 1
                 else:
-                    st.error(f" Incorrect. Correct: **{q['opts'][q['ans']]}**")
+                    st.error(f"Incorrect. Correct: **{q['opts'][q['ans']]}**")
                     st.info(q["exp"])
                 st.session_state[f"answered_{i}"] = True
 
@@ -736,13 +743,13 @@ elif tab == "Quiz":
     st.write(f"**Your total score: {st.session_state.quiz_score} / {len(questions)} ({score_percentage:.0f}%)**")
     
     if score_percentage >= 80:
-        st.success(" Excellent! You have great knowledge about DR!")
+        st.success("Excellent! You have great knowledge about DR!")
     elif score_percentage >= 60:
-        st.info(" Good job! Keep learning more about DR.")
+        st.info("Good job! Keep learning more about DR.")
     else:
-        st.warning(" Consider reviewing the About DR and Symptoms sections.")
+        st.warning("Consider reviewing the About DR and Symptoms sections.")
     
-    if st.button(" Reset Quiz"):
+    if st.button("Reset Quiz"):
         st.session_state.quiz_score = 0
         for i in range(len(questions)):
             if f"answered_{i}" in st.session_state:
@@ -754,10 +761,10 @@ elif tab == "Quiz":
 # -------------------- Generate Report Tab --------------------
 elif tab == "Generate Report":
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.header(" Generate Medical Report")
+    st.header("Generate Medical Report")
     
     # Patient Information Form
-    st.subheader(" Patient Information")
+    st.subheader("Patient Information")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -778,11 +785,11 @@ elif tab == "Generate Report":
     st.markdown("---")
     
     # Generate Report Button
-    if st.button(" Generate & Download Report", type="primary", use_container_width=300):
+    if st.button("Generate & Download Report", type="primary", use_container_width=300):
         if not patient_name or not patient_age or patient_gender == "Select":
-            st.error(" Please fill in all patient information fields.")
+            st.error("Please fill in all patient information fields.")
         elif not st.session_state.diagnosis_result:
-            st.error(" Please complete an AI diagnosis first before generating a report.")
+            st.error("Please complete an AI diagnosis first before generating a report.")
         else:
             # Generate HTML report
             result = st.session_state.diagnosis_result
@@ -948,13 +955,13 @@ elif tab == "Generate Report":
             </head>
             <body>
                 <div class="header">
-                    <h1> DIABETIC RETINOPATHY DIAGNOSIS REPORT</h1>
+                    <h1>DIABETIC RETINOPATHY DIAGNOSIS REPORT</h1>
                     <p style="font-size: 18px;">AI-Powered Retinal Analysis System</p>
                     <p>Report Generated: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}</p>
                 </div>
                 
                 <div class="section">
-                    <h2> Patient Information</h2>
+                    <h2>Patient Information</h2>
                     <div class="info-row"><span class="label">Full Name:</span> {patient_name}</div>
                     <div class="info-row"><span class="label">Age:</span> {patient_age} years</div>
                     <div class="info-row"><span class="label">Gender:</span> {patient_gender}</div>
@@ -963,7 +970,7 @@ elif tab == "Generate Report":
                 </div>
                 
                 <div class="section">
-                    <h2> AI Diagnosis Results</h2>
+                    <h2>AI Diagnosis Results</h2>
                     <div class="diagnosis-box">
                         <h3>Detected Stage: {result['stage']}</h3>
                         <span class="severity-badge">Severity: {result.get('severity', 'N/A').upper()}</span>
@@ -979,7 +986,7 @@ elif tab == "Generate Report":
                 </div>
                 
                 <div class="section">
-                    <h2> Recommended Treatment & Management</h2>
+                    <h2>Recommended Treatment & Management</h2>
                     <div class="recommendations">
                         <ul>
                             {''.join([f'<li>{rec}</li>' for rec in result['recommendations']])}
@@ -988,7 +995,7 @@ elif tab == "Generate Report":
                 </div>
                 
                 <div class="section">
-                    <h2> Patient Knowledge Assessment</h2>
+                    <h2>Patient Knowledge Assessment</h2>
                     <div class="info-row"><span class="label">Quiz Score:</span> {st.session_state.quiz_score} / 10</div>
                     <div class="info-row"><span class="label">Percentage:</span> {(st.session_state.quiz_score/10)*100:.0f}%</div>
                     <div class="info-row"><span class="label">Assessment:</span> 
@@ -998,7 +1005,7 @@ elif tab == "Generate Report":
                     </div>
                 </div>
                 
-                {"<div class='section'><h2> Retinal Image Analysis</h2>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
+                {"<div class='section'><h2>Retinal Image Analysis</h2>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
                 {"<div class='image-row'>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
                     {"<div class='image-item'><img src='data:image/png;base64," + img_base64 + "' alt='Original Image'/><p class='image-caption'>Original Retinal Image</p></div>" if img_base64 else ""}
                     {"<div class='image-item'><img src='data:image/png;base64," + processed_img_base64 + "' alt='Processed Image'/><p class='image-caption'>Preprocessed Image</p></div>" if processed_img_base64 else ""}
@@ -1006,7 +1013,7 @@ elif tab == "Generate Report":
                 {"</div></div>" if img_base64 or processed_img_base64 or gradcam_img_base64 else ""}
                 
                 <div class="disclaimer">
-                    <h3 style="margin-top: 0; color: #F57C00;"> Important Disclaimer</h3>
+                    <h3 style="margin-top: 0; color: #F57C00;">Important Disclaimer</h3>
                     <p><strong>This report is generated by an AI system and should NOT replace professional medical advice.</strong></p>
                     <p>The AI model is designed as a screening tool to assist healthcare professionals. All diagnoses should be confirmed by a qualified ophthalmologist through comprehensive clinical examination.</p>
                     <p><strong>Next Steps:</strong></p>
@@ -1029,19 +1036,19 @@ elif tab == "Generate Report":
             """
             
             # Create download button
-            st.success(" Report generated successfully!")
+            st.success("Report generated successfully!")
             st.download_button(
-                label=" Download Report (HTML)",
+                label="Download Report (HTML)",
                 data=html_content,
                 file_name=f"DR_Report_{patient_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
                 mime="text/html",
                 use_container_width=True
             )
             
-            st.info(" **Tip:** Open the downloaded HTML file in any web browser to view your complete report. You can print or save it as PDF from your browser.")
+            st.info("Tip: Open the downloaded HTML file in any web browser to view your complete report. You can print or save it as PDF from your browser.")
             
             # Show preview
-            with st.expander(" Preview Report"):
+            with st.expander("Preview Report"):
                 st.markdown("**Report Summary:**")
                 st.write(f"- **Patient:** {patient_name}, {patient_age} years old, {patient_gender}")
                 st.write(f"- **Diagnosis:** {result['stage']}")
